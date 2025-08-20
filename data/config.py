@@ -10,6 +10,10 @@ DIR = Path(__file__).absolute().parent.parent
 
 TELEGRAM_BOT_TOKEN = env.str("TELEGRAM_BOT_TOKEN")
 
+API_PORT = env.str("API_PORT", 8000)
+
+WEBHOOK_URL = env.str("WEBHOOK_URL")
+
 RD_URI = env.str("RD_URI", default=None)
 
 MONGO_HOST = env.str("MONGO_HOST", "localhost")
