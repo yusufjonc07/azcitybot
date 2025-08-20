@@ -1,10 +1,11 @@
 from bson.objectid import ObjectId as BsonObjectId
 from motor.motor_tornado import MotorClient, MotorCollection
 from pydantic import BaseModel
+import certifi
 
 from data.config import MONGO_NAME, MONGO_URL
 
-client = MotorClient(MONGO_URL)
+client = MotorClient(MONGO_URL, tlsCAFile=certifi.where())
 db = client[MONGO_NAME]
 
 
@@ -28,6 +29,11 @@ class Base(BaseModel):
         num = await cls._collection.count_documents({})
         return num
 
+    @classmethod
+    async def get_by(cls, **kwargs):
+        obj = await cls._collection.find_one(kwargs)
+        return cls(**obj) if obj else None
+    
     @classmethod
     async def get(cls, id: int):
         obj = await cls._collection.find_one({"_id": id})

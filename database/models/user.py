@@ -16,6 +16,7 @@ class User(Base):
     id: int = Field(default_factory=int, alias="_id")
     name: str
     username: str | None = Field(default=None)
+    fullname: str | None = Field(default=None)
     status: str = Field(default="user")
     lang: str
 
@@ -32,7 +33,7 @@ class User(Base):
         return [] if status >= self_status else [i.name for i in self._status if i.value < self_status]
 
     @classmethod
-    async def get_or_create(cls, id: int, name: str, username: str | None, lang: str):
+    async def get_or_create(cls, id: int, name: str, username: str | None,  lang: str):
         user = await cls.get(id)
         user = (
             await cls.update(user.id, name=name, username=username)
