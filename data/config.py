@@ -14,6 +14,8 @@ API_PORT = env.str("API_PORT", 8000)
 
 WEBHOOK_URL = env.str("WEBHOOK_URL")
 
+GENERAL_CHAT_ID = env.str("GENERAL_CHAT_ID")
+
 RD_URI = env.str("RD_URI", default=None)
 
 MONGO_HOST = env.str("MONGO_HOST", "localhost")
