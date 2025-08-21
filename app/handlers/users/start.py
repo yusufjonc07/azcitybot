@@ -1,10 +1,11 @@
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message
 
-from app.handlers.routers import user_router as router
 from app.keyboards.lang import LangKeyboard
 from loader import _
 
+router = Router()
 
 @router.message(Command("start"))
 async def start_cmd(message: Message):

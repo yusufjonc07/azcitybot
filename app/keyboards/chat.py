@@ -4,16 +4,16 @@ from .base import BaseInlineKeyboard
 
 
 class NewChatKeyboard(BaseInlineKeyboard):
-    def keyboard(self):
+    def keyboard(self, lang: str):
         builder = self.builder()
         builder.button(
             text=_("🟢 New Chat"),
-            callback_data=NewChatKeyboard.Callback(data="start")  # oddiy string emas, Callback ishlatyapmiz
+            callback_data=NewChatKeyboard.Callback(lang=lang)  # oddiy string emas, Callback ishlatyapmiz
         )
         return builder.as_markup()
 
     class Callback(CallbackData, prefix="newchat"):
-        data: str
+        lang: str
 
 
 class EndChatKeyboard(BaseInlineKeyboard):

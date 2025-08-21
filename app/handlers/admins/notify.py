@@ -1,6 +1,6 @@
 import asyncio
 
-from aiogram import F
+from aiogram import F, Router
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
@@ -10,7 +10,9 @@ from app.states import NotifyState
 from database.models import User
 from loader import _
 from utils import logger
-from app.handlers.routers import admin_router as router
+
+
+router = Router()
 
 
 @router.message(Command("notify"))

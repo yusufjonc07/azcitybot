@@ -1,12 +1,12 @@
 import csv
 import io
 
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import BufferedInputFile, Message
-
-from app.handlers.routers import admin_router as router
 from database.models import User
 
+router = Router()
 
 @router.message(Command("users"))
 async def _users(message: Message):

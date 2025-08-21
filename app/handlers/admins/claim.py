@@ -1,13 +1,15 @@
+from aiogram import Router
 from aiogram.types import CallbackQuery
-from app.handlers.routers import admin_router as router
 from app.keyboards.chat import ClaimChatKeyboard, EndChatKeyboard
 from database.models import Chat, User
 from loader import _
 
+router = Router()
+
 @router.callback_query(ClaimChatKeyboard.Callback.filter())
 async def claim_chat(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callback):
     
-    print("came")
+    await callback.answer()
     user_id = callback.from_user.id
     chat_user_id = int(callback_data.data)
     admin = await User.get(user_id)
@@ -25,29 +27,25 @@ async def claim_chat(callback: CallbackQuery, callback_data: ClaimChatKeyboard.C
 
 
     client_former_group = await Chat._collection.find_one({
-        'user_id': user_id,
-        'support_group_id': {'$in': group_ids}
-    })
+    "user_id": user_id,
+    "support_group_id": {"$in": group_ids}
+})
 
-    if client_former_group:
-        to_group_id = client_former_group['support_group_id']
+    if client_former_group and client_former_group.get("support_group_id"):
+        to_group_id = client_former_group["support_group_id"]
     else:
-        # Count how many active clients each group has
-        group_loads = {}
-        for gid in group_ids:
-            count = await Chat._collection.count_documents({
-                'support_group_id': gid,
-                'status': 'active'
+        group_loads = {
+            gid: await Chat._collection.count_documents({
+                "support_group_id": gid,
+                "status": "active"
             })
-            group_loads[gid] = count
+            for gid in group_ids
+        }
 
         if all(v == 0 for v in group_loads.values()):
-            # if absolutely no active chats in any group -> default to first group
             to_group_id = group_ids[0]
         else:
-            # Pick the group with the least active clients
             to_group_id = min(group_loads, key=group_loads.get)
-
     # Find the pending chat
     chat = await Chat._collection.find_one({
         'user_id': chat_user_id,
