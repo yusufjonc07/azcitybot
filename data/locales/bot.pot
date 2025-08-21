@@ -22,7 +22,7 @@ msgid "get users list [admin]"
 msgstr ""
 
 #: app/commands/default.py:8
-msgid "start chat"
+msgid "start chat"                  
 msgstr ""
 
 #: app/commands/default.py:9
@@ -43,5 +43,29 @@ msgstr ""
 
 #: app/handlers/users/start.py:10
 msgid "Hello <b>{}</b>"
+msgstr ""
+
+#: app/handlers/admins/notify.py:18
+msgid "Enter message text:"
+msgstr ""
+
+#: app/handlers/users/chat.py:47
+msgid "Chat cancelled."
+msgstr ""
+
+#: app/keyboards/chat.py:10
+msgid "🟢 New Chat"
+msgstr ""
+
+#: app/keyboards/chat.py:23
+msgid "🙌 End Chat"
+msgstr ""
+
+#: app/keyboards/chat.py:35
+msgid "🙅‍♂️ Cancel Chat"
+msgstr ""
+
+#: app/keyboards/chat.py:47
+msgid "☑️ Claim Chat"
 msgstr ""
 
