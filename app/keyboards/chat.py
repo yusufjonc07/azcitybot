@@ -17,16 +17,16 @@ class NewChatKeyboard(BaseInlineKeyboard):
 
 
 class EndChatKeyboard(BaseInlineKeyboard):
-    def keyboard(self):
+    def keyboard(self, chatId: str):
         builder = self.builder()
         builder.button(
             text=_("🙌 End Chat"),
-            callback_data=EndChatKeyboard.Callback(data="stop")
+            callback_data=EndChatKeyboard.Callback(chatId=chatId)
         )
         return builder.as_markup()
 
     class Callback(CallbackData, prefix="endchat"):
-        data: str
+        chatId: str
         
 class CancelChatKeyboard(BaseInlineKeyboard):
     def keyboard(self):
