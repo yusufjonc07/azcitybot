@@ -7,7 +7,7 @@ class NewChatKeyboard(BaseInlineKeyboard):
     def keyboard(self):
         builder = self.builder()
         builder.button(
-            text=_("New Chat"),
+            text=_("🟢 New Chat"),
             callback_data=NewChatKeyboard.Callback(data="start")  # oddiy string emas, Callback ishlatyapmiz
         )
         return builder.as_markup()
@@ -20,7 +20,7 @@ class EndChatKeyboard(BaseInlineKeyboard):
     def keyboard(self):
         builder = self.builder()
         builder.button(
-            text=_("End Chat"),
+            text=_("🙌 End Chat"),
             callback_data=EndChatKeyboard.Callback(data="stop")
         )
         return builder.as_markup()
@@ -32,7 +32,7 @@ class CancelChatKeyboard(BaseInlineKeyboard):
     def keyboard(self):
         builder = self.builder()
         builder.button(
-            text=_("Cancel Chat"),
+            text=_("🙅‍♂️ Cancel Chat"),
             callback_data=CancelChatKeyboard.Callback(data="cancel")
         )
         return builder.as_markup()
@@ -44,7 +44,7 @@ class ClaimChatKeyboard(BaseInlineKeyboard):
     def keyboard(self, user_Id):
         builder = self.builder()
         builder.button(
-            text=_("Claim Chat"),
+            text=_("☑️ Claim Chat"),
             callback_data=ClaimChatKeyboard.Callback(data=user_Id)
         )
         return builder.as_markup()
