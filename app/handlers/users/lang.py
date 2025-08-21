@@ -1,12 +1,13 @@
+from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 
 from app.keyboards import LangKeyboard
-from app.handlers.routers import user_router as router
 from app.keyboards.chat import NewChatKeyboard
 from database.models import User
 from loader import _
 
+router = Router()
 
 @router.message(Command("lang"))
 async def _lang(message: Message):
