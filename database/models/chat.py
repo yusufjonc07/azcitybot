@@ -5,6 +5,7 @@ from bson import ObjectId
 from pydantic import Field
 
 from database.base import Base
+from database.models.user import User
 
 
 class Status(Enum):
@@ -35,7 +36,6 @@ class Chat(Base):
         status = getattr(self._status, status).value
         return [] if status >= self_status else [i.name for i in self._status if i.value < self_status]
 
-
     @classmethod
     async def get_or_create(cls, id: int, name: str, username: str | None, lang: str):
         user = await cls.get(id)
@@ -45,7 +45,7 @@ class Chat(Base):
             else await cls.create(_id=id, name=name, username=username, lang=lang)
         )
         return user
-    
+
     @classmethod
     async def add(cls, user_id: int):
         print("adding chat")
@@ -67,5 +67,8 @@ class Chat(Base):
             return chat
         else:
             raise ValueError("User already has a pending chat")
+
+    async def get_user(self):
+        return await User.get(self.user_id)
 
 Chat.set_collection("chats")

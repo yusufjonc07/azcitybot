@@ -18,6 +18,7 @@ class User(Base):
     username: str | None = Field(default=None)
     fullname: str | None = Field(default=None)
     status: str = Field(default="user")
+    admin_groups: list[str] = Field(default_factory=list)
     lang: str
 
     _status: Status = Status
