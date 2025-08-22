@@ -1,4 +1,4 @@
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.types import Message
 from database.models import Chat, User
 from loader import _
@@ -18,7 +18,7 @@ class IsReply(Filter):
 
 
 # --- ADMIN REPLY HANDLER (text + media) ---
-@router.message(IsReply())
+@router.message(IsReply(), ~F.text.startswith("/")         )
 async def admin_reply(message: Message):
     logger.info("Admin reply received", message.message_id)
     # Check if this chat is one of the admin groups
