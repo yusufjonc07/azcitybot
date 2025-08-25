@@ -18,7 +18,6 @@ async def _lang_callback(call: CallbackQuery, callback_data: LangKeyboard.Callba
     await call.answer("Processing...", show_alert=False)
     await call.message.edit_text(
         _("welcome_message", locale=callback_data.lang),
-        reply_markup=NewChatKeyboard.keyboard()
     )
 
     try:

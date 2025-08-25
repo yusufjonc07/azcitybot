@@ -72,11 +72,12 @@ msgstr ""
 
 #: app/handlers/users/lang.py:20
 msgid "welcome_message"
-msgstr ""
+msgstr "👋 Welcome to AzCity Travel Support!
+We’re here to help you with all your travel needs—whether it’s booking, inquiries, or travel advice.
 
-#: app/keyboards/chat.py:10
-msgid "🟢 New Chat"
-msgstr ""
+💬 Simply type your question, and our team (or this bot) will guide you step by step.
+
+✈️ Let’s make your journey smooth and unforgettable!"
 
 #: app/keyboards/chat.py:23
 msgid "🙌 End Chat"

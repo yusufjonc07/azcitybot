@@ -3,19 +3,6 @@ from loader import _
 from .base import BaseInlineKeyboard
 
 
-class NewChatKeyboard(BaseInlineKeyboard):
-    def keyboard(self, lang: str):
-        builder = self.builder()
-        builder.button(
-            text=_("🟢 New Chat"),
-            callback_data=NewChatKeyboard.Callback(lang=lang)  # oddiy string emas, Callback ishlatyapmiz
-        )
-        return builder.as_markup()
-
-    class Callback(CallbackData, prefix="newchat"):
-        lang: str
-
-
 class EndChatKeyboard(BaseInlineKeyboard):
     def keyboard(self, chatId: str):
         builder = self.builder()
@@ -52,8 +39,6 @@ class ClaimChatKeyboard(BaseInlineKeyboard):
     class Callback(CallbackData, prefix="claimchat"):
         data: int
 
-
-NewChatKeyboard = NewChatKeyboard()
 EndChatKeyboard = EndChatKeyboard()
 ClaimChatKeyboard = ClaimChatKeyboard()
 CancelChatKeyboard = CancelChatKeyboard()
