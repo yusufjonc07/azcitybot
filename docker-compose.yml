@@ -24,6 +24,8 @@ services:
             - ./bin/entrypoint.sh
         volumes:
             - ./logs:/app/logs
+        ports:
+            - "8989:8989" # or whatever your API_PORT is
     redis:
         image: redis:alpine
         restart: unless-stopped

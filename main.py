@@ -1,8 +1,10 @@
-import asyncio
 
+import uvicorn
+from server import app as appServer
 from app import setup_routes, setup_middlewares, set_default_commands
 from loader import dp, bot
 from utils import logger
+from data.config import API_PORT
 
 
 async def on_startup() -> None:
@@ -19,8 +21,7 @@ async def main() -> None:
     await setup_routes(dp)
     dp.startup.register(on_startup)
     dp.shutdown.register(on_shutdown)
-    # await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    uvicorn.run(appServer, host="0.0.0.0", port=API_PORT)
