@@ -1,17 +1,18 @@
-# Translations template for PROJECT.
+# Uzbek translations for PROJECT.
 # Copyright (C) 2025 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2025-08-25 21:58+0900\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2025-08-25 22:01+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: uz\n"
+"Language-Team: uz <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -19,73 +20,72 @@ msgstr ""
 
 #: app/commands/default.py:8
 msgid "start chat"
-msgstr ""
+msgstr "chatni boshlash"
 
 #: app/commands/default.py:9
 msgid "change language"
-msgstr ""
+msgstr "tilni o'zgartirish"
 
 #: app/handlers/admins/claim.py:18
 msgid "You are not an admin."
-msgstr ""
+msgstr "Siz admin emassiz."
 
 #: app/handlers/admins/claim.py:25
 msgid "No group connected to your admin account."
-msgstr ""
+msgstr "Sizning admin hisobingizga biror guruh ulanmagan."
 
 #: app/handlers/admins/claim.py:56
 msgid "Chat not found or already claimed."
-msgstr ""
+msgstr "Chat topilmadi yoki allaqachon o'zlashtirilgan."
 
 #: app/handlers/admins/claim.py:96
 msgid "You have claimed this chat."
-msgstr ""
+msgstr "Siz bu chatni o'zlashtirdingiz."
 
 #: app/handlers/admins/join.py:14
 msgid "This command can only be used in groups."
-msgstr ""
+msgstr "Bu buyruq faqat guruhlarda ishlatilishi mumkin."
 
 #: app/handlers/admins/join.py:19
 msgid "Usage: /admin @username"
-msgstr ""
+msgstr "Foydalanish: /admin @username"
 
 #: app/handlers/admins/notify.py:20
 msgid "Enter message text:"
-msgstr ""
+msgstr "Xabar matnini kiriting:"
 
 #: app/handlers/users/chat.py:15
 msgid "A support agent will reach out to you soon."
-msgstr ""
+msgstr "Tez orada siz bilan qo‘llab-quvvatlash xizmati xodimi bog‘lanadi."
 
 #: app/handlers/users/chat.py:136
 msgid "Chat cancelled."
-msgstr ""
+msgstr "Chat bekor qilindi."
 
 #: app/handlers/users/chat.py:170
 msgid "Talk ended"
-msgstr ""
+msgstr "Suhbat yakunlandi"
 
 #: app/handlers/users/lang.py:14
 msgid "Select language:"
-msgstr ""
+msgstr "Tilni tanlang:"
 
 #: app/handlers/users/lang.py:20
 msgid "welcome_message"
-msgstr ""
+msgstr "xush kelibsiz_xabari"
 
 #: app/keyboards/chat.py:10
 msgid "🟢 New Chat"
-msgstr ""
+msgstr "🟢 Yangi chat"
 
 #: app/keyboards/chat.py:23
 msgid "🙌 End Chat"
-msgstr ""
+msgstr "🙌 Chatni tugatish"
 
 #: app/keyboards/chat.py:35
 msgid "🙅‍♂️ Cancel Chat"
-msgstr ""
+msgstr "🙅‍♂️ Chatni bekor qilish"
 
 #: app/keyboards/chat.py:47
 msgid "☑️ Claim Chat"
-msgstr ""
-
+msgstr "☑️ Chatni o'zlashtirish"

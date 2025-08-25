@@ -1,14 +1,14 @@
 # Russian translations for PROJECT.
-# Copyright (C) 2023 ORGANIZATION
+# Copyright (C) 2025 ORGANIZATION
 # This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2023.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2024-01-23 05:29+0200\n"
-"PO-Revision-Date: 2023-09-26 01:25+0300\n"
+"POT-Creation-Date: 2025-08-25 21:58+0900\n"
+"PO-Revision-Date: 2025-08-25 22:00+0900\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: ru\n"
 "Language-Team: ru <LL@li.org>\n"
@@ -17,33 +17,76 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.14.0\n"
-
-#: app/commands/admins.py:10
-msgid "get users list [admin]"
-msgstr ""
+"Generated-By: Babel 2.17.0\n"
 
 #: app/commands/default.py:8
 msgid "start chat"
-msgstr ""
+msgstr "начать чат"
 
 #: app/commands/default.py:9
 msgid "change language"
-msgstr ""
+msgstr "сменить язык"
 
-#: app/filters/status.py:16
-msgid "Not enough rights🚫"
-msgstr ""
+#: app/handlers/admins/claim.py:18
+msgid "You are not an admin."
+msgstr "Вы не являетесь администратором."
 
-#: app/handlers/users/lang.py:12
+#: app/handlers/admins/claim.py:25
+msgid "No group connected to your admin account."
+msgstr "К вашему аккаунту администратора не подключена ни одна группа."
+
+#: app/handlers/admins/claim.py:56
+msgid "Chat not found or already claimed."
+msgstr "Чат не найден или уже занят."
+
+#: app/handlers/admins/claim.py:96
+msgid "You have claimed this chat."
+msgstr "Вы заняли этот чат."
+
+#: app/handlers/admins/join.py:14
+msgid "This command can only be used in groups."
+msgstr "Эту команду можно использовать только в группах."
+
+#: app/handlers/admins/join.py:19
+msgid "Usage: /admin @username"
+msgstr "Использование: /admin @username"
+
+#: app/handlers/admins/notify.py:20
+msgid "Enter message text:"
+msgstr "Введите текст сообщения:"
+
+#: app/handlers/users/chat.py:15
+msgid "A support agent will reach out to you soon."
+msgstr "В скором времени с вами свяжется агент поддержки."
+
+#: app/handlers/users/chat.py:136
+msgid "Chat cancelled."
+msgstr "Чат отменён."
+
+#: app/handlers/users/chat.py:170
+msgid "Talk ended"
+msgstr "Разговор окончен"
+
+#: app/handlers/users/lang.py:14
 msgid "Select language:"
-msgstr ""
+msgstr "Выберите язык:"
 
-#: app/handlers/users/lang.py:18
-msgid "Language changed!"
-msgstr ""
+#: app/handlers/users/lang.py:20
+msgid "welcome_message"
+msgstr "приветственное_сообщение"
 
-#: app/handlers/users/start.py:10
-msgid "Hello <b>{}</b>"
-msgstr ""
+#: app/keyboards/chat.py:10
+msgid "🟢 New Chat"
+msgstr "🟢 Новый чат"
 
+#: app/keyboards/chat.py:23
+msgid "🙌 End Chat"
+msgstr "🙌 Завершить чат"
+
+#: app/keyboards/chat.py:35
+msgid "🙅‍♂️ Cancel Chat"
+msgstr "🙅‍♂️ Отменить чат"
+
+#: app/keyboards/chat.py:47
+msgid "☑️ Claim Chat"
+msgstr "☑️ Занять чат"
