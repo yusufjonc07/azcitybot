@@ -4,6 +4,7 @@ from loader import dp, bot
 from data.config import WEBHOOK_URL
 from app import setup_routes, setup_middlewares, set_default_commands
 from utils import logger
+from aiogram.exceptions import TelegramBadRequest
 
 app = FastAPI()
 
@@ -23,5 +24,11 @@ async def on_shutdown():
 
 @app.post("/webhook")
 async def webhook(update: dict):
-    await dp.feed_webhook_update(bot, update)
+    
+    try:
+        await dp.feed_webhook_update(bot, update)
+    except TelegramBadRequest as e:
+        logger.error(f"Error processing webhook update: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error processing webhook update: {e}")
     return {"ok": True}
