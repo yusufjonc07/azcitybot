@@ -24,7 +24,6 @@ async def on_shutdown():
 
 @app.post("/webhook")
 async def webhook(update: dict):
-    
     try:
         await dp.feed_webhook_update(bot, update)
     except TelegramBadRequest as e:
