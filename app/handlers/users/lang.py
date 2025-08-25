@@ -3,7 +3,6 @@ from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message
 
 from app.keyboards import LangKeyboard
-from app.keyboards.chat import NewChatKeyboard
 from database.models import User
 from loader import _
 

@@ -1,7 +1,7 @@
 from aiogram import Dispatcher
 
 from .commands import set_default_commands
-from .handlers.routers import user_router, admin_router
+from .handlers.routers import admin_router, user_router
 from .middlewares import setup_middlewares
 
 
