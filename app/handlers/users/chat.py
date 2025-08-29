@@ -6,12 +6,13 @@ from aiogram.exceptions import TelegramBadRequest
 from app.keyboards.chat import CancelChatKeyboard, ClaimChatKeyboard, EndChatKeyboard
 from data.config import GENERAL_CHAT_ID
 from database.models import Chat, User
+from database.models.messageMap import MessageMap
 from loader import _
 from utils import logger
 
 router = Router()
 
-async def new_chat(message: Message, lang: str = 'en'):
+async def new_chat(message: Message, lang: str = 'uz'):
     await message.reply(text=_("A support agent will reach out to you soon.", locale=lang))
     
     try:
@@ -34,6 +35,9 @@ async def new_chat(message: Message, lang: str = 'en'):
 
 
 async def forward_message(message: Message, group_id: int, fmt_caption: any, last_message_id: int = None):
+    
+    
+    
     if message.text:
         return await message.bot.send_message(
             chat_id=group_id,
@@ -114,20 +118,30 @@ async def forward_user_msg(message: Message):
     def fmt_caption(base_text: str = ""):
         return f"💬 {user.full_name} ({user.id})\n\n{base_text}"
 
+
     try:
         sent = await forward_message(message, group_id, fmt_caption, last_message_id)
     except TelegramBadRequest as e:
         logger.info("Forwading without reply")
-        sent = await forward_message(message, group_id, fmt_caption, None) 
+        sent = await forward_message(message, group_id, fmt_caption, None)
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         return
 
     if sent:
         await Chat._collection.update_one(
-                {"user_id": user.id, "status": "active"},
-                {"$set": {"last_message_id": sent.message_id}}
-            )
+            {"user_id": user.id, "status": "active"},
+            {"$set": {"last_message_id": sent.message_id}}
+        )
+        # Store message mapping for edit support
+        await MessageMap._collection.insert_one({
+            "user_id": user.id,
+            "user_msg_id": message.message_id,
+            "group_id": group_id,
+            "group_msg_id": sent.message_id,
+            "direction": "user_to_group",
+            "created_at": int(datetime.now().timestamp())
+        })
 
 
 @router.callback_query(CancelChatKeyboard.Callback.filter())
