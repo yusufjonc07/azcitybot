@@ -1,6 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message
 from database.models import Chat, User
+from database.models.messageMap import MessageMap
 from loader import _
 from aiogram.filters import Filter, Command
 from aiogram.types import Message, ChatMemberUpdated
@@ -39,26 +40,38 @@ async def admin_reply(message: Message):
     user_id = int(match.group(1))
 
     try:
+        sent = None
         if message.text:
-            await message.bot.send_message(user_id, message.text)
+            sent = await message.bot.send_message(user_id, message.text)
         elif message.photo:
-            await message.bot.send_photo(user_id, message.photo[-1].file_id, caption=message.caption or "")
+            sent = await message.bot.send_photo(user_id, message.photo[-1].file_id, caption=message.caption or "")
         elif message.document:
-            await message.bot.send_document(user_id, message.document.file_id, caption=message.caption or "")
+            sent = await message.bot.send_document(user_id, message.document.file_id, caption=message.caption or "")
         elif message.video:
-            await message.bot.send_video(user_id, message.video.file_id, caption=message.caption or "")
+            sent = await message.bot.send_video(user_id, message.video.file_id, caption=message.caption or "")
         elif message.voice:
-            await message.bot.send_voice(user_id, message.voice.file_id, caption=message.caption or "")
+            sent = await message.bot.send_voice(user_id, message.voice.file_id, caption=message.caption or "")
         elif message.sticker:
-            await message.bot.send_sticker(user_id, message.sticker.file_id)
+            sent = await message.bot.send_sticker(user_id, message.sticker.file_id)
         else:
-            await message.bot.send_message(user_id, "[Unsupported message type]")
+            sent = await message.bot.send_message(user_id, "[Unsupported message type]")
 
         # keep last message tracking in sync
         await Chat._collection.update_one(
             {"user_id": user_id, "status": "active"},
             {"$set": {"last_message_id": message.message_id}}
         )
+
+        # Store message mapping for edit support (admin->user)
+        if sent:
+            await MessageMap._collection.insert_one({
+                "user_id": user_id,
+                "user_msg_id": sent.message_id,
+                "group_id": message.chat.id,
+                "group_msg_id": message.message_id,
+                "direction": "group_to_user",
+                "created_at": int(message.date.timestamp())
+            })
 
     except Exception as e:
         logger.error(f"Failed to send to user {user_id}: {e}")
