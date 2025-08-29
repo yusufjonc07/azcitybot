@@ -163,11 +163,14 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
                 "_id": int(callback_data.chatId),
                 "status": "active",
         })
+        user = await User._collection.find_one({
+                "_id": chat['user_id'],
+        })
     
         if chat and chat["notificated_message_id"]:
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
             await callback.bot.send_message(chat_id=chat["support_group_id"], text=close_text)
-            await callback.bot.send_message(chat_id=chat["user_id"], text=_("Talk ended"))
+            await callback.bot.send_message(chat_id=chat["user_id"], text=_("Talk ended", locale=user['lang']))
             await callback.bot.edit_message_text(chat_id=GENERAL_CHAT_ID, message_id=chat["notificated_message_id"], text=close_text)
 
     except Exception as e:

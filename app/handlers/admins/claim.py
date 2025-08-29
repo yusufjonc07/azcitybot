@@ -7,7 +7,7 @@ from loader import _
 router = Router()
 
 @router.callback_query(ClaimChatKeyboard.Callback.filter())
-async def claim_chat(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callback):
+async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callback):
     
     await callback.answer()
     user_id = callback.from_user.id

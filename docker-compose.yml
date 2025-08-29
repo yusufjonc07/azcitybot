@@ -25,7 +25,7 @@ services:
         volumes:
             - ./logs:/app/logs
         ports:
-            - "9898:8989" # or whatever your API_PORT is
+            - "8989:8989" # or whatever your API_PORT is
     redis:
         image: redis:alpine
         restart: unless-stopped

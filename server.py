@@ -12,10 +12,15 @@ app = FastAPI()
 @app.on_event("startup")
 async def on_startup():
     await setup_middlewares(dp)
-    await set_default_commands()
     await setup_routes(dp)
-    await bot.delete_webhook()
-    await bot.set_webhook(WEBHOOK_URL)
+    
+    try:
+        await bot.delete_webhook()
+        await bot.set_webhook(WEBHOOK_URL)
+        await set_default_commands()
+    except Exception as e:
+        logger.error(f"Error: {e}")
+        
     logger.info("Bot started!")
 
 @app.on_event("shutdown")
