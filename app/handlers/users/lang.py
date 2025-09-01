@@ -30,7 +30,7 @@ async def _admin(message: Message):
     admin_groups = user.get("admin_groups", [])
     if group_id not in admin_groups:
         admin_groups.append(group_id)
-        await User._collection.update_one({"_id": user["_id"]}, {"$set": {"admin_groups": admin_groups}})
+        await User._collection.update_one({"_id": user["_id"]}, {"$set": {"admin_groups": admin_groups, "status": "admin"}})
         await message.reply(_(f"@{username} is now an admin for this group!"))
     else:
         await message.reply(_(f"@{username} is already an admin for this group."))
