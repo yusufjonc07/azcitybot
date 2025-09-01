@@ -7,6 +7,8 @@ from data.config import MONGO_NAME, MONGO_URL
 
 client = MotorClient(
     MONGO_URL, 
+     ## Uncomment when using on your local machine
+
     # tlsCAFile=certifi.where()
 )
 db = client[MONGO_NAME]
