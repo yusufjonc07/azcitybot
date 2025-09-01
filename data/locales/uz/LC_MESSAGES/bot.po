@@ -72,10 +72,7 @@ msgstr "Tilni tanlang:"
 
 #: app/handlers/users/lang.py:20
 msgid "welcome_message"
-msgstr "👋 AzCity Travel mijozlarni qo‘llab-quvvatlash xizmatiga xush kelibsiz!
-Biz sizning barcha sayohat ehtiyojlaringizda yordam beramiz — bron qilish, so‘rovlar yoki sayohat bo‘yicha maslahatlar.
-💬 Savolingizni yozing, va jamoamiz (yoki ushbu bot) sizni bosqichma-bosqich yo‘naltiradi.
-✈️ Sayohatingizni qulay va unutilmas qilaylik!"
+msgstr "🙂 Assalomu alaykum!\n\n✈️ Aviachipta xarid qilmoqchi bo'lsangiz, \n📍 qayerdan qayerga kerakligini,\n📆 borish va qaytib kelish sanalarini,\n✍️ aniqroq yozib yuborsangiz,\n👨‍💻 hodimlarimmiz tezda ko'rib, batafsil javob berishadi!"
 
 #: app/keyboards/chat.py:23
 msgid "🙌 End Chat"

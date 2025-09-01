@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, MessageDeletionEvent
+from aiogram.types import Message
 from database.models import Chat, User
 from motor.motor_asyncio import AsyncIOMotorCollection
 from datetime import datetime
