@@ -73,7 +73,7 @@ msgstr "Выберите язык:"
 
 #: app/handlers/users/lang.py:20
 msgid "welcome_message"
-msgstr "<tg-emoji custom_emoji_id=\"5371073319107827779\">🙂</tg-emoji> Привет!\n\n<tg-emoji custom_emoji_id=\"5361600266225326825\">✈️</tg-emoji> Если хотите купить билет, \n<tg-emoji custom_emoji_id=\"5391032818111363540\">📍</tg-emoji> Укажите откуда и куда,\n<tg-emoji custom_emoji_id=\"5431032818111363540\">📆</tg-emoji> Даты поездки и возвращения,\n<tg-emoji custom_emoji_id=\"5458382591121964689\">✍️</tg-emoji> Напишите точнее,\n<tg-emoji custom_emoji_id=\"5190498849440931467\">👨‍💻</tg-emoji> Наши сотрудники быстро посмотрят и дадут подробный ответ!"
+msgstr "<tg-emoji emoji-id=\"5371073319107827779\">🙂</tg-emoji> Привет!\n\n<tg-emoji emoji-id=\"5361600266225326825\">✈️</tg-emoji> Если хотите купить билет, \n<tg-emoji emoji-id=\"5391032818111363540\">📍</tg-emoji> Укажите откуда и куда,\n<tg-emoji emoji-id=\"5431032818111363540\">📆</tg-emoji> Даты поездки и возвращения,\n<tg-emoji emoji-id=\"5458382591121964689\">✍️</tg-emoji> Напишите точнее,\n<tg-emoji emoji-id=\"5190498849440931467\">👨‍💻</tg-emoji> Наши сотрудники быстро посмотрят и дадут подробный ответ!"
 
 #: app/keyboards/chat.py:23
 msgid "🙌 End Chat"
