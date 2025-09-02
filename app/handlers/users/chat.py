@@ -168,10 +168,6 @@ async def _cancel_chat(callback: CallbackQuery, callback_data: CancelChatKeyboar
 async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Callback):
     await callback.answer()
     
-    close_text = f"#yopildi \n Suhbat yakunladi: {callback.from_user.full_name} ({callback.from_user.id})"
-    await callback.message.edit_text(text=f"✈️ Suhbat yakunladi: {callback.from_user.full_name} ({callback.from_user.id})", reply_markup=None)
-
-
     try:
         chat = await Chat._collection.find_one({
                 "_id": int(callback_data.chatId),
@@ -180,7 +176,16 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
         user = await User._collection.find_one({
                 "_id": chat['user_id'],
         })
-    
+        
+        group = await callback.bot.get_chat(chat["support_group_id"])
+
+        chatting_time = datetime.now().timestamp() - chat["created_at"]
+        hours, remainder = divmod(chatting_time, 3600)
+        minutes, seconds = divmod(remainder, 60)
+
+        close_text = f"#yopildi \n Suhbat yakunladi: {callback.from_user.full_name} ({callback.from_user.id})"
+        await callback.message.edit_text(text=f"✈️ Suhbat yakunladi: \n Admin: {callback.from_user.full_name} \n Mijoz: {user.full_name} ({user.id}) \n Guruh: {group.title} \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {seconds} soniya", reply_markup=None)
+
         if chat and chat["notificated_message_id"]:
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
             await callback.bot.send_message(chat_id=chat["support_group_id"], text=close_text)
