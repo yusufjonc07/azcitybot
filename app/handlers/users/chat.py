@@ -13,8 +13,11 @@ from utils import logger
 router = Router()
 
 async def new_chat(message: Message, lang: str = 'uz'):
-    await message.reply(text=_("A support agent will reach out to you soon.", locale=lang))
-    
+
+    text = f"<a href='https://myurls.co/azcitytravel'><tg-emoji custom_emoji_id='5474330856958994237'>✅</tg-emoji>{_('A support agent will reach out to you soon.', locale=lang)}</a>"
+
+    await message.reply(text=text, parse_mode="HTML")
+
     try:
         chat = await Chat.add(message.from_user.id)
         sent = await message.bot.send_message(
