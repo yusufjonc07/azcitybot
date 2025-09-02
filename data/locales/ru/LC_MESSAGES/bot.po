@@ -57,7 +57,7 @@ msgstr "Введите текст сообщения:"
 
 #: app/handlers/users/chat.py:15
 msgid "A support agent will reach out to you soon."
-msgstr "В скором времени с вами свяжется агент поддержки."
+msgstr "👨‍💻 Пожалуйста, подождите немного, \n в ближайшее время наши сотрудники свяжутся с вами."
 
 #: app/handlers/users/chat.py:136
 msgid "Chat cancelled."
@@ -73,8 +73,7 @@ msgstr "Выберите язык:"
 
 #: app/handlers/users/lang.py:20
 msgid "welcome_message"
-msgstr "🙂 Привет!\n\n✈️ Если хотите купить билет, \n📍 укажите откуда и куда,\n📆 даты поездки и возвращения,\n✍️ напишите точнее,\n👨‍💻 наши сотрудники быстро посмотрят и дадут подробный ответ!"
-
+msgstr "<tg-emoji emoji-id=\"5371073319107827779\">🙂</tg-emoji> Привет!\n\n<tg-emoji emoji-id=\"5361600266225326825\">✈️</tg-emoji> Если хотите купить билет, \n<tg-emoji emoji-id=\"5391032818111363540\">📍</tg-emoji> Укажите откуда и куда,\n<tg-emoji emoji-id=\"5431032818111363540\">📆</tg-emoji> Даты поездки и возвращения,\n<tg-emoji emoji-id=\"5458382591121964689\">✍️</tg-emoji> Напишите точнее,\n<tg-emoji emoji-id=\"5190498849440931467\">👨‍💻</tg-emoji> Наши сотрудники быстро посмотрят и дадут подробный ответ!"
 
 #: app/keyboards/chat.py:23
 msgid "🙌 End Chat"
