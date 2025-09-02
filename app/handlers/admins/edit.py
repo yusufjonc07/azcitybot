@@ -30,7 +30,8 @@ async def on_user_edit(message: Message):
         return
     try:
         # Format the message with edit timestamp
-        edit_time = message.edit_date.strftime("%H:%M")
+        edit_datetime = datetime.fromtimestamp(message.edit_date)
+        edit_time = edit_datetime.strftime("%H:%M")
         edited_text = f"{message.text}\n\n✎ edited • {edit_time}"
         await message.bot.edit_message_text(
             chat_id=mapping["group_id"],
@@ -55,7 +56,8 @@ async def on_admin_edit(message: Message):
         return
 
     # Format the message with edit timestamp
-    edit_time = message.edit_date.strftime("%H:%M")
+    edit_datetime = datetime.fromtimestamp(message.edit_date)
+    edit_time = edit_datetime.strftime("%H:%M")
     edited_text = f"{message.text}\n\n✎ edited • {edit_time}"
 
     try:
@@ -70,43 +72,69 @@ async def on_admin_edit(message: Message):
 # --- USER REACTION HANDLER ---
 @router.message_reaction(F.chat.type == "private")
 async def on_user_reaction(event: MessageReactionUpdated):
+    print(event.chat.id, event.message_id)
     # Find mapping for the message that was reacted to
     mapping = await MessageMap._collection.find_one({
         "user_id": event.chat.id,
         "user_msg_id": event.message_id,
         "direction": "user_to_group"
     })
+    # If no mapping found, try the reverse direction
     if not mapping:
+        mapping = await MessageMap._collection.find_one({
+            "user_id": event.chat.id,
+            "user_msg_id": event.message_id,
+            "direction": "group_to_user"
+        })
+    
+    
+    if not mapping:
+        logger.info(f"No mapping found for user reaction: ")
         return
     
     try:
         # Set reactions on the admin group message
-        await event.bot.set_message_reaction(
+        sent = await event.bot.set_message_reaction(
             chat_id=mapping["group_id"],
             message_id=mapping["group_msg_id"],
             reaction=event.new_reaction
         )
+
+        logger.info(f"Reaction sent: {sent}")
+
     except Exception as e:
         logger.error(f"Failed to sync user reaction to group: {e}")
 
 # --- ADMIN REACTION HANDLER ---
 @router.message_reaction()
 async def on_admin_reaction(event: MessageReactionUpdated):
+    
+    print(event.chat.id, event.message_id)
     # Find mapping for the message that was reacted to
     mapping = await MessageMap._collection.find_one({
         "group_id": event.chat.id,
         "group_msg_id": event.message_id,
         "direction": "group_to_user"
     })
+    # If no mapping found, try the reverse direction
     if not mapping:
+        mapping = await MessageMap._collection.find_one({
+            "group_id": event.chat.id,
+            "group_msg_id": event.message_id,
+            "direction": "user_to_group"
+        })
+    if not mapping:
+        logger.info(f"No mapping found for admin reaction: ")
         return
     
     try:
         # Set reactions on the user message
-        await event.bot.set_message_reaction(
+        sent = await event.bot.set_message_reaction(
             chat_id=mapping["user_id"],
             message_id=mapping["user_msg_id"],
             reaction=event.new_reaction
         )
+        
+        logger.info(f"Reaction sent: {sent}")
     except Exception as e:
         logger.error(f"Failed to sync admin reaction to user: {e}")

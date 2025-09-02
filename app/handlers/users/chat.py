@@ -14,7 +14,7 @@ router = Router()
 
 async def new_chat(message: Message, lang: str = 'uz'):
 
-    text = f"<a href='https://myurls.co/azcitytravel'><tg-emoji custom_emoji_id='5474330856958994237'>✅</tg-emoji>{_('A support agent will reach out to you soon.', locale=lang)}</a>"
+    text = f"<a href='https://myurls.co/azcitytravel'>{_('A support agent will reach out to you soon.', locale=lang)}</a>"
 
     await message.reply(text=text, parse_mode="HTML")
 
@@ -184,9 +184,14 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
                 "_id": int(callback_data.chatId),
                 "status": "active",
         })
+
+        if not chat:
+            return
+
         user = await User._collection.find_one({
                 "_id": chat['user_id'],
         })
+        
         
         group = await callback.bot.get_chat(chat["support_group_id"])
 
@@ -195,7 +200,7 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
         minutes, seconds = divmod(remainder, 60)
 
         close_text = f"#yopildi \n Suhbat yakunladi: <b>{callback.from_user.full_name}</b> ({callback.from_user.id})"
-        await callback.message.edit_text(text=f"✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user.full_name}</b> ({user.id}) \n Guruh: <b>{group.title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {seconds} soniya", reply_markup=None, parse_mode="HTML")
+        await callback.message.edit_text(text=f"✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user['name']}</b> ({user['_id']}) \n Guruh: <b>{group.title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {seconds} soniya", reply_markup=None, parse_mode="HTML")
 
         if chat and chat["notificated_message_id"]:
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
