@@ -85,3 +85,6 @@ msgstr "🙅‍♂️ Chatni bekor qilish"
 #: app/keyboards/chat.py:47
 msgid "☑️ Claim Chat"
 msgstr "☑️ Chatni o'zlashtirish"
+
+msgid "edited"
+msgstr "Tahrirlandi"

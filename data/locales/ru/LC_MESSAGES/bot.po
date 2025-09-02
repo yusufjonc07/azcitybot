@@ -86,3 +86,7 @@ msgstr "🙅‍♂️ Отменить чат"
 #: app/keyboards/chat.py:47
 msgid "☑️ Claim Chat"
 msgstr "☑️ Занять чат"
+
+
+msgid "edited"
+msgstr "Отредактировано"

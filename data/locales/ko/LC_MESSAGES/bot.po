@@ -85,3 +85,6 @@ msgstr "🙅‍♂️ 채팅 취소"
 #: app/keyboards/chat.py:47
 msgid "☑️ Claim Chat"
 msgstr "☑️ 채팅 점유"
+
+msgid "edited"
+msgstr "수정됨" 

@@ -73,6 +73,9 @@ msgstr ""
 msgid "welcome_message"
 msgstr ""
 
+msgid "edited"
+msgstr ""
+
 #: app/keyboards/chat.py:23
 msgid "🙌 End Chat"
 msgstr ""
