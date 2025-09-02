@@ -56,7 +56,7 @@ msgstr "Xabar matnini kiriting:"
 
 #: app/handlers/users/chat.py:15
 msgid "A support agent will reach out to you soon."
-msgstr "Tez orada siz bilan qo‘llab-quvvatlash xizmati xodimi bog‘lanadi."
+msgstr "👨‍💻 Biroz kutib tursangiz iltimos, \ntez orada hodimlarimmiz Siz bilan bog'lanishadi."
 
 #: app/handlers/users/chat.py:136
 msgid "Chat cancelled."
@@ -72,7 +72,7 @@ msgstr "Tilni tanlang:"
 
 #: app/handlers/users/lang.py:20
 msgid "welcome_message"
-msgstr "🙂 Assalomu alaykum!\n\n✈️ Aviachipta xarid qilmoqchi bo'lsangiz, \n📍 qayerdan qayerga kerakligini,\n📆 borish va qaytib kelish sanalarini,\n✍️ aniqroq yozib yuborsangiz,\n👨‍💻 hodimlarimmiz tezda ko'rib, batafsil javob berishadi!"
+msgstr "<tg-emoji emoji-id=\"5371073319107827779\">🙂</tg-emoji> Assalomu alaykum!\n\n<tg-emoji emoji-id=\"5361600266225326825\">✈️</tg-emoji> Aviachipta xarid qilmoqchi bo'lsangiz, \n<tg-emoji emoji-id=\"5391032818111363540\">📍</tg-emoji> Qayerdan qayerga kerakligini,\n<tg-emoji emoji-id=\"5431897022456145283\">📆</tg-emoji> Borish va qaytib kelish sanalarini,\n<tg-emoji emoji-id=\"5458382591121964689\">✍️</tg-emoji> Aniqroq yozib yuborsangiz,\n<tg-emoji emoji-id=\"5190498849440931467\">👨‍💻</tg-emoji> Hodimlarimiz tezda ko'rib, batafsil javob berishadi!"
 
 #: app/keyboards/chat.py:23
 msgid "🙌 End Chat"

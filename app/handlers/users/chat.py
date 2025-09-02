@@ -19,8 +19,9 @@ async def new_chat(message: Message, lang: str = 'uz'):
         chat = await Chat.add(message.from_user.id)
         sent = await message.bot.send_message(
             chat_id=GENERAL_CHAT_ID,
-            text=f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 {message.text}",
-            reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id)
+            text=f"#kutyapti Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n 💬 {message.text}",
+            reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
+            parse_mode="HTML"
         )
         await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id}})
     except ValueError:
@@ -42,47 +43,54 @@ async def forward_message(message: Message, group_id: int, fmt_caption: any, las
         return await message.bot.send_message(
             chat_id=group_id,
             text=fmt_caption(message.text),
-            reply_to_message_id=last_message_id
+            reply_to_message_id=last_message_id,
+            parse_mode="HTML"
         )
     elif message.photo:
         return await message.bot.send_photo(
             chat_id=group_id,
             photo=message.photo[-1].file_id,
             caption=fmt_caption(message.caption or ""),
-            reply_to_message_id=last_message_id
+            reply_to_message_id=last_message_id,
+            parse_mode="HTML"
         )
     elif message.document:
         return await message.bot.send_document(
             chat_id=group_id,
             document=message.document.file_id,
             caption=fmt_caption(message.caption or ""),
-            reply_to_message_id=last_message_id
+            reply_to_message_id=last_message_id,
+            parse_mode="HTML"
         )
     elif message.video:
         return await message.bot.send_video(
             chat_id=group_id,
             video=message.video.file_id,
             caption=fmt_caption(message.caption or ""),
-            reply_to_message_id=last_message_id
+            reply_to_message_id=last_message_id,
+            parse_mode="HTML"
         )
     elif message.voice:
         return await message.bot.send_voice(
             chat_id=group_id,
             voice=message.voice.file_id,
             caption=fmt_caption(message.caption or ""),
-            reply_to_message_id=last_message_id
+            reply_to_message_id=last_message_id,
+            parse_mode="HTML"
         )
     elif message.sticker:
         return await message.bot.send_sticker(
             chat_id=group_id,
             sticker=message.sticker.file_id,
-            reply_to_message_id=last_message_id
+            reply_to_message_id=last_message_id,
+            parse_mode="HTML"
         )
     else:
         return await message.bot.send_message(
             chat_id=group_id,
             text=fmt_caption("[Unsupported message type]"),
-            reply_to_message_id=last_message_id
+            reply_to_message_id=last_message_id,
+            parse_mode="HTML"
         )
     
     return None
@@ -116,7 +124,7 @@ async def forward_user_msg(message: Message):
 
     # Prepare formatted caption for all media/text
     def fmt_caption(base_text: str = ""):
-        return f"💬 {user.full_name} ({user.id})\n\n{base_text}"
+        return f"💬 <b>{user.full_name}</b> ({user.id})\n\n{base_text}"
 
 
     try:
@@ -183,12 +191,12 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
         hours, remainder = divmod(chatting_time, 3600)
         minutes, seconds = divmod(remainder, 60)
 
-        close_text = f"#yopildi \n Suhbat yakunladi: {callback.from_user.full_name} ({callback.from_user.id})"
-        await callback.message.edit_text(text=f"✈️ Suhbat yakunladi: \n Admin: {callback.from_user.full_name} \n Mijoz: {user.full_name} ({user.id}) \n Guruh: {group.title} \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {seconds} soniya", reply_markup=None)
+        close_text = f"#yopildi \n Suhbat yakunladi: <b>{callback.from_user.full_name}</b> ({callback.from_user.id})"
+        await callback.message.edit_text(text=f"✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user.full_name}</b> ({user.id}) \n Guruh: <b>{group.title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {seconds} soniya", reply_markup=None, parse_mode="HTML")
 
         if chat and chat["notificated_message_id"]:
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
-            await callback.bot.send_message(chat_id=chat["support_group_id"], text=close_text)
+            await callback.bot.send_message(chat_id=chat["support_group_id"], text=close_text, parse_mode="HTML")
             await callback.bot.send_message(chat_id=chat["user_id"], text=_("Talk ended", locale=user['lang']))
             await callback.bot.edit_message_text(chat_id=GENERAL_CHAT_ID, message_id=chat["notificated_message_id"], text=close_text)
 

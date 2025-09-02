@@ -44,34 +44,9 @@ async def _lang(message: Message):
 async def _lang_callback(call: CallbackQuery, callback_data: LangKeyboard.Callback):
     await call.answer("Processing...", show_alert=False)
     
-    welcome_message = _("welcome_message", locale=callback_data.lang)
-    
-    emoji_map = {
-        "🙂": "5371073319107827779",
-        "✈️": "5361600266225326825",
-        "📍": "5391032818111363540",
-        "📆": "5431897022456145283",
-        "✍️": "5458382591121964689",
-        "👨‍💻": "5190498849440931467"
-    }
-    
-    entities = []
-    for emoji_char, emoji_id in emoji_map.items():
-        start = 0
-        while True:
-            idx = welcome_message.find(emoji_char, start)
-            if idx == -1:
-                break
-            entities.append(MessageEntity(
-                type="custom_emoji",
-                offset=idx,
-                length=len(emoji_char),
-                custom_emoji_id=emoji_id
-            ))
-            start = idx + len(emoji_char)
             
     await call.message.edit_text(
-        welcome_message, entities=entities
+        _("welcome_message", locale=callback_data.lang), parse_mode="HTML",
     )
 
     try:
