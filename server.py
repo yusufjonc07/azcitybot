@@ -16,7 +16,7 @@ async def on_startup():
     
     try:
         await bot.delete_webhook()
-        await bot.set_webhook(WEBHOOK_URL, allowed_updates=["message", "callback_query", "edited_message"])
+        await bot.set_webhook(WEBHOOK_URL, allowed_updates=["message", "callback_query", "edited_message", "message_reaction"])
         await set_default_commands()
     except Exception as e:
         logger.error(f"Error: {e}")
