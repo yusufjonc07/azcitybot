@@ -166,7 +166,7 @@ async def forward_user_msg(message: Message):
         await MessageMap._collection.insert_one({
             "user_id": user.id,
             "user_msg_id": message.message_id,
-            "group_id": group_id,
+            "group_id": str(group_id),
             "group_msg_id": sent.message_id,
             "direction": "user_to_group",
             "created_at": int(datetime.now().timestamp())
@@ -216,8 +216,8 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
         hours, remainder = divmod(chatting_time, 3600)
         minutes, seconds = divmod(remainder, 60)
 
-        close_text = f"#yopildi \n Suhbat yakunladi: <b>{callback.from_user.full_name}</b> ({callback.from_user.id})"
-        await callback.message.edit_text(text=f"✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user['name']}</b> ({user['_id']}) \n Guruh: <b>{group.title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {seconds} soniya", reply_markup=None, parse_mode="HTML")
+        close_text = f"#yopildi ✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user['name']}</b> ({user['_id']}) \n Guruh: <b>{group.title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {round(seconds)} soniya"
+        await callback.message.edit_text(text=close_text, reply_markup=None, parse_mode="HTML")
 
         if chat and chat["notificated_message_id"]:
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})

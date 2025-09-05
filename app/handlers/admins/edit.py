@@ -54,7 +54,7 @@ async def on_admin_edit(message: Message):
     logger.info("Admin edit received", message.message_id)
     # Find mapping for group->user
     mapping = await MessageMap._collection.find_one({
-        "group_id": message.chat.id,
+        "group_id": str(message.chat.id),
         "group_msg_id": message.message_id,
         "direction": "group_to_user"
     })
@@ -81,7 +81,7 @@ async def on_admin_edit(message: Message):
         print(f"Failed to edit forwarded user message: {e}")
 
 # --- USER REACTION HANDLER ---
-@router.message_reaction()
+@router.message_reaction(F.chat.type == "private")
 async def on_user_reaction(event: MessageReactionUpdated):
     
     print("User Reaction", event.chat.id, event.message_id)
@@ -118,23 +118,23 @@ async def on_user_reaction(event: MessageReactionUpdated):
         logger.error(f"Failed to sync user reaction to group: {e}")
 
 # --- ADMIN REACTION HANDLER ---
-@router.message_reaction()
+@router.message_reaction(F.chat.type == "group")
 async def on_admin_reaction(event: MessageReactionUpdated):
 
     print("Admin Reaction", event.chat.id, event.message_id)
     
     # Find mapping for the message that was reacted to
     mapping = await MessageMap._collection.find_one({
-        "group_id": event.chat.id,
+        "group_id": str(event.chat.id),
         "group_msg_id": event.message_id,
-        "direction": "group_to_user"
+        "direction": "user_to_group"
     })
     # If no mapping found, try the reverse direction
     if not mapping:
         mapping = await MessageMap._collection.find_one({
-            "group_id": event.chat.id,
+            "group_id": str(event.chat.id),
             "group_msg_id": event.message_id,
-            "direction": "user_to_group"
+            "direction": "group_to_user"
         })
     if not mapping:
         logger.info(f"No mapping found for admin reaction: ")

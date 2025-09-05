@@ -67,7 +67,7 @@ async def admin_reply(message: Message):
             await MessageMap._collection.insert_one({
                 "user_id": user_id,
                 "user_msg_id": sent.message_id,
-                "group_id": message.chat.id,
+                "group_id": str(message.chat.id),
                 "group_msg_id": message.message_id,
                 "direction": "group_to_user",
                 "created_at": int(message.date.timestamp())
