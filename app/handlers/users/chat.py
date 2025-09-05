@@ -14,7 +14,7 @@ router = Router()
 
 async def new_chat(message: Message, lang: str = 'uz'):
 
-    text = f"<a href='https://myurls.co/azcitytravel'>{_('A support agent will reach out to you soon.', locale=lang)}</a>"
+    text = f"<a href='https://myurls.co/azcitytravel'><i>{_('A support agent will reach out to you soon.', locale=lang)}</i></a>"
 
     await message.reply(text=text, parse_mode="HTML")
 
@@ -210,7 +210,6 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
                 "_id": chat['user_id'],
         })
         
-        
         group = await callback.bot.get_chat(chat["support_group_id"])
 
         chatting_time = datetime.now().timestamp() - chat["created_at"]
@@ -223,7 +222,7 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
         if chat and chat["notificated_message_id"]:
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
             await callback.bot.send_message(chat_id=chat["support_group_id"], text=close_text, parse_mode="HTML")
-            await callback.bot.send_message(chat_id=chat["user_id"], text=_("Talk ended", locale=user['lang']))
+            await callback.bot.send_message(chat_id=chat["user_id"], text=f"<a href='https://myurls.co/azcitytravel'><i>{_("Talk ended", locale=user['lang'])}</i></a>")
             await callback.bot.edit_message_text(chat_id=GENERAL_CHAT_ID, message_id=chat["notificated_message_id"], text=close_text)
 
     except Exception as e:
