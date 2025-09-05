@@ -26,7 +26,7 @@ async def new_chat(message: Message, lang: str = 'uz'):
             reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
             parse_mode="HTML"
         )
-        await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id}})
+        await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "notificated_message_text": sent.text}})
     except ValueError:
         chat = None
         
@@ -39,8 +39,6 @@ async def new_chat(message: Message, lang: str = 'uz'):
 
 
 async def forward_message(message: Message, group_id: int, fmt_caption: any, last_message_id: int = None):
-    
-    
     
     if message.text:
         return await message.bot.send_message(
@@ -112,8 +110,8 @@ async def forward_user_msg(message: Message):
     # Find the user's active chat
     chat = await Chat._collection.find_one({
         "user_id": user.id,
-        "status": "active",
-        "support_group_id": {"$ne": None}
+        "status": {"$in": ["active", "pending"]},
+        # "support_group_id": {"$ne": None}
     })
     
 
@@ -121,6 +119,26 @@ async def forward_user_msg(message: Message):
         client = await User.get(user.id)
         await new_chat(message=message, lang=client.lang)
         return
+    
+    if chat['status'] == 'pending' and chat["notificated_message_text"]:
+        logger.info(f"Edit pending message {message.text}")
+        new_text = f"{chat["notificated_message_text"]}\n\n{message.text}"
+        
+        await message.bot.edit_message_text(
+            chat_id=GENERAL_CHAT_ID,
+            message_id=chat["notificated_message_id"],
+            text=new_text,
+            reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
+            parse_mode="HTML"
+        )
+        
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+            {"$set": {"notificated_message_text": new_text}}
+        ) 
+        
+        return
+    
 
     group_id = chat["support_group_id"]
     last_message_id = chat.get("last_message_id")

@@ -26,6 +26,7 @@ class Chat(Base):
     finished_at: int | None = None
     status: str = Field(default="pending")
     notificated_message_id: int | None = None
+    notificated_message_text: str | None = None
     last_message_id: int | None = None
     support_group_id: int | None = None
 
@@ -42,7 +43,7 @@ class Chat(Base):
         user = (
             await cls.update(user.id, name=name, username=username)
             if user
-            else await cls.create(_id=id, name=name, username=username, lang=lang)
+            else await cls.create(name=name, username=username, lang=lang)
         )
         return user
 
@@ -58,12 +59,16 @@ class Chat(Base):
         print("checking chat")
 
         if not pending_chats:
-            print("no pending chats found")
-            chat = await cls.create(
-                id=str(ObjectId()),
-                user_id=user_id,
-                created_at=int(datetime.now().timestamp())
-            )
+            print("no pending chats founddd!")
+            try:
+                chat = await cls.create(
+                    user_id=user_id,
+                    created_at=int(datetime.now().timestamp())
+                )
+            except Exception as e:
+                print(e)
+                return
+            print(chat)
             return chat
         else:
             raise ValueError("User already has a pending chat")

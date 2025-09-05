@@ -4,6 +4,7 @@ from database.models import Chat, User
 from motor.motor_asyncio import AsyncIOMotorCollection
 from datetime import datetime
 from utils import logger
+from loader import _
 
 from database.models.messageMap import MessageMap
 
@@ -25,18 +26,23 @@ async def on_user_edit(message: Message):
         "user_msg_id": message.message_id,
         "direction": "user_to_group"
     })
+    
+    
     if not mapping:
         logger.info("No mapping found for user edit", message.message_id)
         return
+    
+    user = message.from_user
     try:
         # Format the message with edit timestamp
         edit_datetime = datetime.fromtimestamp(message.edit_date)
         edit_time = edit_datetime.strftime("%H:%M")
-        edited_text = f"{message.text}\n\n✎ edited • {edit_time}"
+        edited_text = f"💬 <b>{user.full_name}</b> ({user.id})\n\n{message.text}\n\n<i>✎ {_("edited", locale='uz')} • {edit_time}</i>"
         await message.bot.edit_message_text(
             chat_id=mapping["group_id"],
             message_id=mapping["group_msg_id"],
-            text=edited_text
+            text=edited_text,
+            parse_mode="HTML"
         )
     except Exception as e:
         print(f"Failed to edit forwarded group message: {e}")
@@ -54,17 +60,22 @@ async def on_admin_edit(message: Message):
     })
     if not mapping:
         return
+    user = await User.get(mapping['user_id'])
+    
+    if not user:
+        return
 
     # Format the message with edit timestamp
     edit_datetime = datetime.fromtimestamp(message.edit_date)
     edit_time = edit_datetime.strftime("%H:%M")
-    edited_text = f"{message.text}\n\n✎ edited • {edit_time}"
+    edited_text = f"{message.text}\n\n<i>✎ {_("edited", locale=user.lang)} • {edit_time}</i>"
 
     try:
         await message.bot.edit_message_text(
             chat_id=mapping["user_id"],
             message_id=mapping["user_msg_id"],
-            text=edited_text
+            text=edited_text,
+            parse_mode="HTML"
         )
     except Exception as e:
         print(f"Failed to edit forwarded user message: {e}")

@@ -55,11 +55,20 @@ class Base(BaseModel):
 
     @classmethod
     async def create(cls, **kwargs):
+        # Use a counter collection for unique auto-increment IDs
         if "_id" not in kwargs:
-            kwargs["_id"] = await cls.count() + 1
+            from database.base import db
+            counter = await db["counters"].find_one_and_update(
+                {"_id": cls._collection.name + "_id"},
+                {"$inc": {"seq": 1}},
+                upsert=True,
+                return_document=True
+            )
+            kwargs["_id"] = counter["seq"]
         obj = cls(**kwargs)
-        obj = await cls._collection.insert_one(obj.model_dump(by_alias=True))
-        return await cls.get(obj.inserted_id)
+        
+        await cls._collection.insert_one(obj.model_dump(by_alias=True))
+        return await cls.get(kwargs["_id"])
 
     @classmethod
     async def delete(cls, id: int):
