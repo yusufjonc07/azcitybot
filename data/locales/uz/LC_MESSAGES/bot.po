@@ -56,7 +56,7 @@ msgstr "Xabar matnini kiriting:"
 
 #: app/handlers/users/chat.py:15
 msgid "A support agent will reach out to you soon."
-msgstr "👨‍💻 Biroz kutib tursangiz iltimos, \ntez orada hodimlarimmiz Siz bilan bog'lanishadi."
+msgstr "🤖 Iltimos biroz kutib tursangiz, hodimlarimiz tez orada Siz bilan bog'lanishadi."
 
 #: app/handlers/users/chat.py:136
 msgid "Chat cancelled."
@@ -64,7 +64,7 @@ msgstr "Chat bekor qilindi."
 
 #: app/handlers/users/chat.py:170
 msgid "Talk ended"
-msgstr "Suhbat yakunlandi"
+msgstr "🤖  Suhbat yukunlandi, rahmat!"
 
 #: app/handlers/users/lang.py:14
 msgid "Select language:"

@@ -81,9 +81,10 @@ async def on_admin_edit(message: Message):
         print(f"Failed to edit forwarded user message: {e}")
 
 # --- USER REACTION HANDLER ---
-@router.message_reaction(F.chat.type == "private")
+@router.message_reaction()
 async def on_user_reaction(event: MessageReactionUpdated):
-    print(event.chat.id, event.message_id)
+    
+    print("User Reaction", event.chat.id, event.message_id)
     # Find mapping for the message that was reacted to
     mapping = await MessageMap._collection.find_one({
         "user_id": event.chat.id,
@@ -119,8 +120,9 @@ async def on_user_reaction(event: MessageReactionUpdated):
 # --- ADMIN REACTION HANDLER ---
 @router.message_reaction()
 async def on_admin_reaction(event: MessageReactionUpdated):
+
+    print("Admin Reaction", event.chat.id, event.message_id)
     
-    print(event.chat.id, event.message_id)
     # Find mapping for the message that was reacted to
     mapping = await MessageMap._collection.find_one({
         "group_id": event.chat.id,

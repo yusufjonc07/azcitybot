@@ -57,7 +57,7 @@ msgstr "Введите текст сообщения:"
 
 #: app/handlers/users/chat.py:15
 msgid "A support agent will reach out to you soon."
-msgstr "👨‍💻 Пожалуйста, подождите немного, \n в ближайшее время наши сотрудники свяжутся с вами."
+msgstr "🤖 Пожалуйста, подождите немного, наши сотрудники скоро свяжутся с вами."
 
 #: app/handlers/users/chat.py:136
 msgid "Chat cancelled."
@@ -65,7 +65,7 @@ msgstr "Чат отменён."
 
 #: app/handlers/users/chat.py:170
 msgid "Talk ended"
-msgstr "Разговор окончен"
+msgstr "🤖 Разговор завершён, спасибо!"
 
 #: app/handlers/users/lang.py:14
 msgid "Select language:"
