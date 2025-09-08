@@ -40,6 +40,32 @@ def add_prefix(message: Message, prefix: str) -> tuple[str, list[MessageEntity]]
 
     return text, entities
 
+async def copy_user_message(message: Message, to_chat_id: int, prefix: str, reply_message_id: int = None, bold_user_name: bool = True):
+
+    prefix = f"💬 {message.from_user.full_name} ({message.from_user.id})\n\n"
+
+    if message.text:  # plain text
+        text = prefix + message.text
+        entities = shift_entities(message.entities, len(prefix))
+    elif message.caption:  # media with caption
+        text = prefix + message.caption
+        entities = shift_entities(message.caption_entities, len(prefix))
+    else:
+        # no text/caption at all (e.g., photo with no caption)
+        text = prefix
+        entities = None
+    
+    if bold_user_name:
+        bold_entities = add_bold_entity(text, message.from_user.full_name)
+        entities = (entities or []) + bold_entities
+
+    return await message.copy_to(
+        chat_id=to_chat_id,
+        caption=text,
+        entities=entities,
+        reply_to_message_id=reply_message_id
+    )
+
 
 async def new_chat(message: Message, lang: str = 'uz'):
 
@@ -49,18 +75,10 @@ async def new_chat(message: Message, lang: str = 'uz'):
 
     try:
         
-        text, entities = add_prefix(message, f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ")
-        
-        print(text, entities)
-        
+        prefix = f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 "
+        sent = await copy_user_message(message, GENERAL_CHAT_ID, prefix, bold_user_name=True)
+
         chat = await Chat.add(message.from_user.id)
-        sent = await message.bot.send_message(
-            chat_id=GENERAL_CHAT_ID,
-            text=text,
-            reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
-            entities=entities
-        )
-        
         if chat:
             await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "notificated_message_text": sent.text}})
     
@@ -74,61 +92,6 @@ async def new_chat(message: Message, lang: str = 'uz'):
     
     return chat
 
-
-async def forward_message(message: Message, group_id: int, last_message_id: int = None):
-    
-    text, entities = add_prefix(message, f"💬 {message.from_user.full_name} ({message.from_user.id})\n\n")
-    
-    if message.text:
-        # Preserve original formatting and links
-        return await message.bot.send_message(
-            chat_id=group_id,
-            text=text,
-            reply_to_message_id=last_message_id,
-            entities=entities
-        )
-        
-    elif message.photo:
-        return await message.bot.send_photo(
-            chat_id=group_id,
-            photo=message.photo[-1].file_id,
-            caption=text,
-            reply_to_message_id=last_message_id,
-            entities=entities
-        )
-    elif message.document:
-        return await message.bot.send_document(
-            chat_id=group_id,
-            document=message.document.file_id,
-            caption=text,
-            reply_to_message_id=last_message_id,
-            entities=entities
-        )
-    elif message.video:
-        return await message.bot.send_video(
-            chat_id=group_id,
-            video=message.video.file_id,
-            caption=text,
-            reply_to_message_id=last_message_id,
-            entities=entities
-        )
-    elif message.voice:
-        return await message.bot.send_voice(
-            chat_id=group_id,
-            voice=message.voice.file_id,
-            caption=text,
-            reply_to_message_id=last_message_id,
-            entities=entities
-        )
-    elif message.sticker:
-        return await message.bot.send_sticker(
-            chat_id=group_id,
-            sticker=message.sticker.file_id,
-            reply_to_message_id=last_message_id,
-            parse_mode="HTML"
-        )
-    else:
-        return None
 
 
 # --- USER MESSAGE FORWARDING (text + media) ---
@@ -183,10 +146,10 @@ async def forward_user_msg(message: Message):
 
 
     try:
-        sent = await forward_message(message, group_id, last_message_id)
+        sent = await copy_user_message(message, group_id, f"Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ", last_message_id)
     except TelegramBadRequest as e:
         logger.info("Forwading without reply")
-        sent = await forward_message(message, group_id, None)
+        sent = await copy_user_message(message, group_id, f"Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ", None)
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         return
