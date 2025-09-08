@@ -19,14 +19,24 @@ async def new_chat(message: Message, lang: str = 'uz'):
     await message.reply(text=text, parse_mode="HTML")
 
     try:
+        
+        if message.entities:
+            new_message_text = f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 {message.text}"
+        else:
+            new_message_text = f"#kutyapti Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n 💬 {message.text}"
+        
+        
         chat = await Chat.add(message.from_user.id)
         sent = await message.bot.send_message(
             chat_id=GENERAL_CHAT_ID,
-            text=f"#kutyapti Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n 💬 {message.text}",
+            text=new_message_text,
             reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
-            parse_mode="HTML"
+            parse_mode=None if message.entities else "HTML",
+            entities=message.entities if message.entities else None
         )
-        await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "notificated_message_text": sent.text}})
+        if chat:
+            await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "notificated_message_text": sent.text}})
+    
     except ValueError:
         chat = None
         
