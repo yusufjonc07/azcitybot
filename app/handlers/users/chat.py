@@ -150,7 +150,7 @@ async def forward_user_msg(message: Message):
 
     # Prepare formatted caption for all media/text
     def fmt_caption(base_text: str = ""):
-        return f"💬 <b>{user.full_name}</b> ({user.id})\n\n{base_text}"
+        return f"💬 {user.full_name} ({user.id})\n\n{base_text}"
 
 
     try:
