@@ -49,14 +49,14 @@ async def new_chat(message: Message, lang: str = 'uz'):
 
     try:
         
-        prefixed_message = add_prefix(message, f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ")
+        text, entities = add_prefix(message, f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ")
         
         chat = await Chat.add(message.from_user.id)
         sent = await message.bot.send_message(
             chat_id=GENERAL_CHAT_ID,
-            text=prefixed_message.text,
+            text=text,
             reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
-            entities=prefixed_message.entities
+            entities=entities
         )
         
         if chat:
@@ -75,50 +75,48 @@ async def new_chat(message: Message, lang: str = 'uz'):
 
 async def forward_message(message: Message, group_id: int, last_message_id: int = None):
     
-    prefixed_message = add_prefix(message, f"💬 {message.from_user.full_name} ({message.from_user.id})\n\n")
-    
-    
+    text, entities = add_prefix(message, f"💬 {message.from_user.full_name} ({message.from_user.id})\n\n")
     
     if message.text:
         # Preserve original formatting and links
         return await message.bot.send_message(
             chat_id=group_id,
-            text=prefixed_message.text,
+            text=text,
             reply_to_message_id=last_message_id,
-            entities=prefixed_message.entities
+            entities=entities
         )
         
     elif message.photo:
         return await message.bot.send_photo(
             chat_id=group_id,
             photo=message.photo[-1].file_id,
-            caption=prefixed_message.text,
+            caption=text,
             reply_to_message_id=last_message_id,
-            entities=prefixed_message.entites
+            entities=entities
         )
     elif message.document:
         return await message.bot.send_document(
             chat_id=group_id,
             document=message.document.file_id,
-            caption=prefixed_message.text,
+            caption=text,
             reply_to_message_id=last_message_id,
-            entities=prefixed_message.entites
+            entities=entities
         )
     elif message.video:
         return await message.bot.send_video(
             chat_id=group_id,
             video=message.video.file_id,
-            caption=prefixed_message.text,
+            caption=text,
             reply_to_message_id=last_message_id,
-            entities=prefixed_message.entites
+            entities=entities
         )
     elif message.voice:
         return await message.bot.send_voice(
             chat_id=group_id,
             voice=message.voice.file_id,
-            caption=prefixed_message.text,
+            caption=text,
             reply_to_message_id=last_message_id,
-            entities=prefixed_message.entites
+            entities=entities
         )
     elif message.sticker:
         return await message.bot.send_sticker(
