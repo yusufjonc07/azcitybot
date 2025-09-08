@@ -39,13 +39,14 @@ async def new_chat(message: Message, lang: str = 'uz'):
 
 
 async def forward_message(message: Message, group_id: int, fmt_caption: any, last_message_id: int = None):
-    
     if message.text:
+        # Preserve original formatting and links
         return await message.bot.send_message(
             chat_id=group_id,
             text=fmt_caption(message.text),
             reply_to_message_id=last_message_id,
-            parse_mode="HTML"
+            parse_mode=None if message.entities else "HTML",
+            entities=message.entities if message.entities else None
         )
     elif message.photo:
         return await message.bot.send_photo(
@@ -53,7 +54,8 @@ async def forward_message(message: Message, group_id: int, fmt_caption: any, las
             photo=message.photo[-1].file_id,
             caption=fmt_caption(message.caption or ""),
             reply_to_message_id=last_message_id,
-            parse_mode="HTML"
+            parse_mode=None if message.entities else "HTML",
+            entities=message.entities if message.entities else None
         )
     elif message.document:
         return await message.bot.send_document(
@@ -61,7 +63,8 @@ async def forward_message(message: Message, group_id: int, fmt_caption: any, las
             document=message.document.file_id,
             caption=fmt_caption(message.caption or ""),
             reply_to_message_id=last_message_id,
-            parse_mode="HTML"
+            parse_mode=None if message.entities else "HTML",
+            entities=message.entities if message.entities else None
         )
     elif message.video:
         return await message.bot.send_video(
@@ -69,7 +72,8 @@ async def forward_message(message: Message, group_id: int, fmt_caption: any, las
             video=message.video.file_id,
             caption=fmt_caption(message.caption or ""),
             reply_to_message_id=last_message_id,
-            parse_mode="HTML"
+            parse_mode=None if message.entities else "HTML",
+            entities=message.entities if message.entities else None
         )
     elif message.voice:
         return await message.bot.send_voice(
@@ -77,7 +81,8 @@ async def forward_message(message: Message, group_id: int, fmt_caption: any, las
             voice=message.voice.file_id,
             caption=fmt_caption(message.caption or ""),
             reply_to_message_id=last_message_id,
-            parse_mode="HTML"
+            parse_mode=None if message.entities else "HTML",
+            entities=message.entities if message.entities else None
         )
     elif message.sticker:
         return await message.bot.send_sticker(
