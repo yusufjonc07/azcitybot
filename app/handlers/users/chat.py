@@ -40,9 +40,7 @@ def add_prefix(message: Message, prefix: str) -> tuple[str, list[MessageEntity]]
 
     return text, entities
 
-async def copy_user_message(message: Message, to_chat_id: int, prefix: str, reply_message_id: int = None, bold_user_name: bool = True):
-
-    prefix = f"💬 {message.from_user.full_name} ({message.from_user.id})\n\n"
+async def copy_user_message(message: Message, to_chat_id: int, prefix: str, reply_message_id: int = None, bold_user_name: bool = True, reply_markup=None):
 
     if message.text:  # plain text
         text = prefix + message.text
@@ -59,12 +57,19 @@ async def copy_user_message(message: Message, to_chat_id: int, prefix: str, repl
         bold_entities = add_bold_entity(text, message.from_user.full_name)
         entities = (entities or []) + bold_entities
 
-    return await message.copy_to(
-        chat_id=to_chat_id,
-        caption=text,
-        entities=entities,
-        reply_to_message_id=reply_message_id
-    )
+    kwargs = {
+        "chat_id": to_chat_id,
+        "entities": entities,
+        "reply_to_message_id": reply_message_id,
+        "reply_markup": reply_markup,
+    }
+
+    if message.content_type == "text":
+        kwargs["text"] = text
+    else:
+        kwargs["caption"] = text
+
+    return await message.copy_to(**kwargs)
 
 
 async def new_chat(message: Message, lang: str = 'uz'):
@@ -76,7 +81,7 @@ async def new_chat(message: Message, lang: str = 'uz'):
     try:
         
         prefix = f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 "
-        sent = await copy_user_message(message, GENERAL_CHAT_ID, prefix, bold_user_name=True)
+        sent = await copy_user_message(message, GENERAL_CHAT_ID, prefix, bold_user_name=True, reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),)
 
         chat = await Chat.add(message.from_user.id)
         if chat:
