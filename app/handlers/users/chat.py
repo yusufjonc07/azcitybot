@@ -51,6 +51,8 @@ async def new_chat(message: Message, lang: str = 'uz'):
         
         text, entities = add_prefix(message, f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ")
         
+        print(text, entities)
+        
         chat = await Chat.add(message.from_user.id)
         sent = await message.bot.send_message(
             chat_id=GENERAL_CHAT_ID,
