@@ -68,6 +68,8 @@ async def copy_user_message(message: Message, to_chat_id: int, prefix: str, repl
         kwargs["text"] = text
     else:
         kwargs["caption"] = text
+        
+    print("Kwargs", kwargs)
 
     return await message.copy_to(**kwargs)
 
