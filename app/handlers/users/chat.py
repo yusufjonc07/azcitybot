@@ -1,6 +1,6 @@
 from datetime import datetime
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message
+from aiogram.types import CallbackQuery, Message, MessageEntity
 from aiogram.exceptions import TelegramBadRequest
 
 from app.keyboards.chat import CancelChatKeyboard, ClaimChatKeyboard, EndChatKeyboard
@@ -12,6 +12,35 @@ from utils import logger
 
 router = Router()
 
+def shift_entities(entities, shift_by: int):
+    if not entities:
+        return None
+    shifted = []
+    for e in entities:
+        # Entities are immutable, need to copy
+        shifted.append(
+            e.copy(update={"offset": e.offset + shift_by})
+        )
+    return shifted
+
+def add_bold_entity(text: str, substring: str, start_offset: int = 0):
+    """Return an entity list that makes `substring` bold."""
+    offset = text.find(substring, start_offset)
+    if offset == -1:
+        return []
+    return [MessageEntity(type="bold", offset=offset, length=len(substring))]
+
+def add_prefix(message: Message, prefix: str) -> tuple[str, list[MessageEntity]]:
+    
+    text = prefix + (message.text or message.caption or "")
+    entities = shift_entities(message.entities or message.caption_entities or [], len(prefix))
+    
+    bold_entities = add_bold_entity(text, message.from_user.full_name)
+    entities.extend(bold_entities)
+
+    return text, entities
+
+
 async def new_chat(message: Message, lang: str = 'uz'):
 
     text = f"<a href='https://myurls.co/azcitytravel'><i>{_('A support agent will reach out to you soon.', locale=lang)}</i></a>"
@@ -20,20 +49,16 @@ async def new_chat(message: Message, lang: str = 'uz'):
 
     try:
         
-        if message.entities:
-            new_message_text = f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 {message.text}"
-        else:
-            new_message_text = f"#kutyapti Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n 💬 {message.text}"
-        
+        prefixed_message = add_prefix(message, f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ")
         
         chat = await Chat.add(message.from_user.id)
         sent = await message.bot.send_message(
             chat_id=GENERAL_CHAT_ID,
-            text=new_message_text,
+            text=prefixed_message.text,
             reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
-            parse_mode=None if message.entities else "HTML",
-            entities=message.entities if message.entities else None
+            entities=prefixed_message.entities
         )
+        
         if chat:
             await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "notificated_message_text": sent.text}})
     
@@ -48,51 +73,52 @@ async def new_chat(message: Message, lang: str = 'uz'):
     return chat
 
 
-async def forward_message(message: Message, group_id: int, fmt_caption: any, last_message_id: int = None):
+async def forward_message(message: Message, group_id: int, last_message_id: int = None):
+    
+    prefixed_message = add_prefix(message, f"💬 {message.from_user.full_name} ({message.from_user.id})\n\n")
+    
+    
+    
     if message.text:
         # Preserve original formatting and links
         return await message.bot.send_message(
             chat_id=group_id,
-            text=fmt_caption(message.text),
+            text=prefixed_message.text,
             reply_to_message_id=last_message_id,
-            parse_mode=None if message.entities else "HTML",
-            entities=message.entities if message.entities else None
+            entities=prefixed_message.entities
         )
+        
     elif message.photo:
         return await message.bot.send_photo(
             chat_id=group_id,
             photo=message.photo[-1].file_id,
-            caption=fmt_caption(message.caption or ""),
+            caption=prefixed_message.text,
             reply_to_message_id=last_message_id,
-            parse_mode=None if message.entities else "HTML",
-            entities=message.entities if message.entities else None
+            entities=prefixed_message.entites
         )
     elif message.document:
         return await message.bot.send_document(
             chat_id=group_id,
             document=message.document.file_id,
-            caption=fmt_caption(message.caption or ""),
+            caption=prefixed_message.text,
             reply_to_message_id=last_message_id,
-            parse_mode=None if message.entities else "HTML",
-            entities=message.entities if message.entities else None
+            entities=prefixed_message.entites
         )
     elif message.video:
         return await message.bot.send_video(
             chat_id=group_id,
             video=message.video.file_id,
-            caption=fmt_caption(message.caption or ""),
+            caption=prefixed_message.text,
             reply_to_message_id=last_message_id,
-            parse_mode=None if message.entities else "HTML",
-            entities=message.entities if message.entities else None
+            entities=prefixed_message.entites
         )
     elif message.voice:
         return await message.bot.send_voice(
             chat_id=group_id,
             voice=message.voice.file_id,
-            caption=fmt_caption(message.caption or ""),
+            caption=prefixed_message.text,
             reply_to_message_id=last_message_id,
-            parse_mode=None if message.entities else "HTML",
-            entities=message.entities if message.entities else None
+            entities=prefixed_message.entites
         )
     elif message.sticker:
         return await message.bot.send_sticker(
@@ -102,14 +128,7 @@ async def forward_message(message: Message, group_id: int, fmt_caption: any, las
             parse_mode="HTML"
         )
     else:
-        return await message.bot.send_message(
-            chat_id=group_id,
-            text=fmt_caption("[Unsupported message type]"),
-            reply_to_message_id=last_message_id,
-            parse_mode="HTML"
-        )
-    
-    return None
+        return None
 
 
 # --- USER MESSAGE FORWARDING (text + media) ---
@@ -126,7 +145,6 @@ async def forward_user_msg(message: Message):
     chat = await Chat._collection.find_one({
         "user_id": user.id,
         "status": {"$in": ["active", "pending"]},
-        # "support_group_id": {"$ne": None}
     })
     
 
@@ -158,16 +176,13 @@ async def forward_user_msg(message: Message):
     group_id = chat["support_group_id"]
     last_message_id = chat.get("last_message_id")
 
-    # Prepare formatted caption for all media/text
-    def fmt_caption(base_text: str = ""):
-        return f"💬 {user.full_name} ({user.id})\n\n{base_text}"
 
 
     try:
-        sent = await forward_message(message, group_id, fmt_caption, last_message_id)
+        sent = await forward_message(message, group_id, last_message_id)
     except TelegramBadRequest as e:
         logger.info("Forwading without reply")
-        sent = await forward_message(message, group_id, fmt_caption, None)
+        sent = await forward_message(message, group_id, None)
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         return
