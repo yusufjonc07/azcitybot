@@ -174,6 +174,10 @@ async def forward_user_msg(message: Message):
     group_id = chat["support_group_id"]
     last_message_id = chat.get("last_message_id")
 
+    group_id = chat.get("support_group_id")
+    if not group_id:
+        logger.error(f"Chat for user {user.id} is missing support_group_id!")
+        return
 
 
     try:
