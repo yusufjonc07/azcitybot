@@ -31,13 +31,18 @@ async def admin_reply(message: Message):
     if not message.reply_to_message:
         return
 
-    # Extract user_id from the replied-to message
-    match = re.search(r"\((\d+)\)", message.reply_to_message.text or message.reply_to_message.caption or "")
-    if not match:
-        logger.error("No user id found")
+    
+    mapping = await MessageMap._collection.find_one({
+        "group_id": str(message.chat.id),
+        "group_msg_id": message.reply_to_message.message_id,
+        "direction": "user_to_group"
+    })
+    
+    if not mapping:
+        await message.reply(_(f"Cannot find the original user for this reply. {message.chat.id} {message.reply_to_message.message_id}"))
         return
 
-    user_id = int(match.group(1))
+    user_id = mapping["user_id"]
 
     try:
         sent = None
@@ -55,12 +60,6 @@ async def admin_reply(message: Message):
             sent = await message.bot.send_sticker(user_id, message.sticker.file_id)
         else:
             sent = await message.bot.send_message(user_id, "[Unsupported message type]")
-
-        # keep last message tracking in sync
-        await Chat._collection.update_one(
-            {"user_id": user_id, "status": "active"},
-            {"$set": {"last_message_id": message.message_id}}
-        )
 
         # Store message mapping for edit support (admin->user)
         if sent:

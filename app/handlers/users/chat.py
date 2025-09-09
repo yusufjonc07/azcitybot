@@ -40,38 +40,11 @@ def add_prefix(message: Message, prefix: str) -> tuple[str, list[MessageEntity]]
 
     return text, entities
 
-async def copy_user_message(message: Message, to_chat_id: int, prefix: str, reply_message_id: int = None, bold_user_name: bool = True, reply_markup=None):
-
-    if message.text:  # plain text
-        text = prefix + message.text
-        entities = shift_entities(message.entities, len(prefix))
-    elif message.caption:  # media with caption
-        text = prefix + message.caption
-        entities = shift_entities(message.caption_entities, len(prefix))
-    else:
-        # no text/caption at all (e.g., photo with no caption)
-        text = prefix
-        entities = None
-    
-    if bold_user_name:
-        bold_entities = add_bold_entity(text, message.from_user.full_name)
-        entities = (entities or []) + bold_entities
-
-    kwargs = {
-        "chat_id": to_chat_id,
-        "entities": entities,
-        "reply_to_message_id": reply_message_id,
-        "reply_markup": reply_markup,
-    }
-
-    if message.content_type == "text":
-        kwargs["text"] = text
-    else:
-        kwargs["caption"] = text
-        
-    print("Kwargs", kwargs)
-
-    return await message.copy_to(**kwargs)
+async def copy_user_message(message: Message, to_chat_id: int, reply_message_id: int = None):
+    return await message.copy_to(
+        chat_id=to_chat_id,
+        reply_to_message_id=reply_message_id,
+    )
 
 
 async def new_chat(message: Message, lang: str = 'uz'):
@@ -81,13 +54,9 @@ async def new_chat(message: Message, lang: str = 'uz'):
     await message.reply(text=text, parse_mode="HTML")
 
     try:
-        
-        prefix = f"#kutyapti Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 "
-        sent = await copy_user_message(message, GENERAL_CHAT_ID, prefix, bold_user_name=True, reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),)
-
+        sent = await message.bot.send_message(chat_id=GENERAL_CHAT_ID, text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n <i>📩 1 ta o'qilmagan xabar</i>", parse_mode="HTML", reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id))
         chat = await Chat.add(message.from_user.id)
-        if chat:
-            await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "notificated_message_text": sent.text}})
+        await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "pending_message_ids": [message.message_id]}})
     
     except ValueError:
         chat = None
@@ -122,41 +91,41 @@ async def forward_user_msg(message: Message):
         client = await User.get(user.id)
         await new_chat(message=message, lang=client.lang)
         return
-    
-    if chat['status'] == 'pending' and chat["notificated_message_text"]:
-        logger.info(f"Edit pending message {message.text}")
-        new_text = f"{chat["notificated_message_text"]}\n\n{message.text}"
+
+    if chat['status'] == 'pending' and chat["notificated_message_id"]:
+        
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+             {"$push": {"pending_message_ids": message.message_id}}
+        )
         
         await message.bot.edit_message_text(
             chat_id=GENERAL_CHAT_ID,
             message_id=chat["notificated_message_id"],
-            text=new_text,
-            reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id),
-            parse_mode="HTML"
+            text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
+            parse_mode="HTML",
+            reply_markup=ClaimChatKeyboard.keyboard(user.id)
         )
-        
-        await Chat._collection.update_one(
-            {"_id": chat["_id"]},
-            {"$set": {"notificated_message_text": new_text}}
-        ) 
-        
+
         return
     
 
     group_id = chat["support_group_id"]
-    last_message_id = chat.get("last_message_id")
+    notice_message_id = chat.get("notice_message_id")
 
     group_id = chat.get("support_group_id")
     if not group_id:
         logger.error(f"Chat for user {user.id} is missing support_group_id!")
         return
 
-
+    text = ""
+    sent = None
+    
     try:
-        sent = await copy_user_message(message, group_id, f"Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ", last_message_id)
+        sent, text = await copy_user_message(message, group_id, notice_message_id)
     except TelegramBadRequest as e:
         logger.info("Forwading without reply")
-        sent = await copy_user_message(message, group_id, f"Mijoz: {message.from_user.full_name} ({message.from_user.id}) \n 💬 ", None)
+        sent, text = await copy_user_message(message, group_id, None)
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         return
@@ -164,7 +133,7 @@ async def forward_user_msg(message: Message):
     if sent:
         await Chat._collection.update_one(
             {"user_id": user.id, "status": "active"},
-            {"$set": {"last_message_id": sent.message_id}}
+            {"$set": {"notice_message_id": sent.message_id}}
         )
         # Store message mapping for edit support
         await MessageMap._collection.insert_one({
