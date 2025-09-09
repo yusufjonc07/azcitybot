@@ -3,6 +3,8 @@ from aiogram.types import CallbackQuery
 from app.keyboards.chat import ClaimChatKeyboard, EndChatKeyboard
 from database.models import Chat, User
 from loader import _
+from database.models.messageMap import MessageMap
+from datetime import datetime
 
 router = Router()
 
@@ -69,26 +71,44 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
     
     client_user = await User.get(chat_user_id)
 
-    try:
-        extracted = callback.message.text.split("💬", 1)[1].strip()
-    except IndexError:
-        extracted = ""
-
     # Notify the group
-    sent = await callback.bot.send_message(
+    notice_sent = await callback.bot.send_message(
         chat_id=to_group_id,
-        text="#muloqotda\n✅ <b>{name}</b> ({id}) mijoz qabul qilindi\n💬 Suhbat shu yerda davom etadi...\n\n <i>{extracted}</i>".format(
+        text="#muloqotda\n✅ <b>{name}</b> ({id}) mijoz qabul qilindi\n💬 Suhbat shu yerda davom etadi...\n\n".format(
             name=client_user.name,
         id=client_user.id,
-        extracted=extracted
         ),
         parse_mode="HTML",
         reply_markup=EndChatKeyboard.keyboard(chatId=str(chat["_id"])))
     
     await Chat._collection.update_one(
         {"_id": chat["_id"]},
-        {"$set": {"last_message_id": sent.message_id}}
+        {"$set": {"notice_message_id": notice_sent.message_id}}
     )
+    
+    for msg_id in chat.get("pending_message_ids", []):
+        try:
+            
+            sent = await callback.bot.copy_message(
+                chat_id=to_group_id,
+                from_chat_id=client_user.id,
+                message_id=msg_id,
+                reply_to_message_id=notice_sent.message_id
+            )
+
+            await MessageMap._collection.insert_one({
+                "user_id": chat_user_id,
+                "user_msg_id": msg_id,
+                "group_id": str(to_group_id),
+                "group_msg_id": sent.message_id,
+                "direction": "user_to_group",
+                "created_at": int(datetime.now().timestamp())
+            })
+            
+        except Exception as e:
+            print(f"Failed to copy message {msg_id}: {e}")
+    
+    
 
     support_group = await callback.bot.get_chat(to_group_id)
 

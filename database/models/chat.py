@@ -25,9 +25,9 @@ class Chat(Base):
     cancelled_at: int | None = None
     finished_at: int | None = None
     status: str = Field(default="pending")
+    pending_message_ids: list[int] = []
     notificated_message_id: int | None = None
-    notificated_message_text: str | None = None
-    last_message_id: int | None = None
+    notice_message_id: int | None = None
     support_group_id: int | None = None
 
     _status: Status = Status
