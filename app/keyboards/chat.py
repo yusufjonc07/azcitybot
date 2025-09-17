@@ -39,6 +39,23 @@ class ClaimChatKeyboard(BaseInlineKeyboard):
     class Callback(CallbackData, prefix="claimchat"):
         data: int
 
+class ChooseToSend(BaseInlineKeyboard):
+    def keyboard(self, users):
+        builder = self.builder()
+        
+        for id, name in users:
+            builder.button(
+                text=str(name),
+                callback_data=ChooseToSend.Callback(data=id)
+            )
+            
+        builder.adjust(1)
+        return builder.as_markup()
+
+    class Callback(CallbackData, prefix="choosetosend"):
+        data: int
+
 EndChatKeyboard = EndChatKeyboard()
 ClaimChatKeyboard = ClaimChatKeyboard()
 CancelChatKeyboard = CancelChatKeyboard()
+ChooseToSend = ChooseToSend()

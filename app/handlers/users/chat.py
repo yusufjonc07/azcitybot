@@ -122,19 +122,15 @@ async def forward_user_msg(message: Message):
     sent = None
     
     try:
-        sent, text = await copy_user_message(message, group_id, notice_message_id)
+        sent = await copy_user_message(message, group_id, notice_message_id)
     except TelegramBadRequest as e:
         logger.info("Forwading without reply")
-        sent, text = await copy_user_message(message, group_id, None)
+        sent = await copy_user_message(message, group_id, None)
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         return
 
     if sent:
-        await Chat._collection.update_one(
-            {"user_id": user.id, "status": "active"},
-            {"$set": {"notice_message_id": sent.message_id}}
-        )
         # Store message mapping for edit support
         await MessageMap._collection.insert_one({
             "user_id": user.id,

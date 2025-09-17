@@ -15,21 +15,30 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
     user_id = callback.from_user.id
     chat_user_id = int(callback_data.data)
     admin = await User.get(user_id)
-    
     if not admin or not admin.is_admin():
         await callback.answer(_('You are not an admin.'), show_alert=True)
         return
-
     # Find the admin's group (assuming admin_groups is stored in admin model, else adjust accordingly)
     # For this example, let's assume admin.admin_groups exists
     group_ids = getattr(admin, 'admin_groups', None)
     if not group_ids:
         await callback.answer(_('No group connected to your admin account.'), show_alert=True)
         return
+     # Find the pending chat
+    chat = await Chat._collection.find_one({
+        'user_id': chat_user_id,
+        'notificated_message_id': {'$ne': None}
+    })
+    if not chat:
+        return
+    
+    if chat['status'] != 'pending':
+        return
+
 
 
     client_former_group = await Chat._collection.find_one({
-    "user_id": user_id,
+    "user_id": chat_user_id,
     "support_group_id": {"$in": group_ids}
 })
 
@@ -48,16 +57,7 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
             to_group_id = group_ids[0]
         else:
             to_group_id = min(group_loads, key=group_loads.get)
-    # Find the pending chat
-    chat = await Chat._collection.find_one({
-        'user_id': chat_user_id,
-        'status': 'pending',
-        'notificated_message_id': {'$ne': None}
-    })
-    if not chat:
-        await callback.answer(_('Chat not found or already claimed.'), show_alert=True)
-        return
-
+   
     # Update chat: set admin_id, support_group_id, status, claimed_at
     await Chat._collection.update_one(
         {'_id': chat['_id']},
@@ -85,6 +85,15 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
         {"_id": chat["_id"]},
         {"$set": {"notice_message_id": notice_sent.message_id}}
     )
+    
+    await MessageMap._collection.insert_one({
+        "user_id": chat_user_id,
+        "user_msg_id": 000,  # No specific user message here
+        "group_id": str(to_group_id),
+        "group_msg_id": notice_sent.message_id,
+        "direction": "user_to_group",
+        "created_at": int(datetime.now().timestamp())
+    })
     
     for msg_id in chat.get("pending_message_ids", []):
         try:
