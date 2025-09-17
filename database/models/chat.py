@@ -4,7 +4,7 @@ from enum import Enum
 from bson import ObjectId
 from pydantic import Field
 
-from database.base import Base
+from database.base import Base, db
 from database.models.user import User
 
 
@@ -31,6 +31,9 @@ class Chat(Base):
     support_group_id: int | None = None
 
     _status: Status = Status
+    
+    async def get_user(self):
+        return await db["users"].find_one({"_id": self.user_id})
 
     def statuses_to_edit(self, status: str) -> list[str]:
         self_status = getattr(self._status, self.status).value
