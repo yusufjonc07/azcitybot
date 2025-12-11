@@ -49,14 +49,20 @@ async def admin_reply(message: Message, user_id=None):
         chats = await Chat._collection.find({
             "support_group_id": str(message.chat.id),
             "status": "active"
-        }).to_list(length=None)
+        }).to_list()
         
-
-        if len(chats) == 0:
+        chatsCount = await Chat._collection.count_documents({
+            "support_group_id": str(message.chat.id),
+            "status": "active"
+        })
+        
+        
+        if chatsCount == 0:
+            print(chatsCount)
             await message.reply(_("Bu chat uchun faol suhbat topilmadi."))
             return
         
-        elif len(chats) > 1:
+        elif chatsCount > 1:
             
             users = []
             for c in chats:
