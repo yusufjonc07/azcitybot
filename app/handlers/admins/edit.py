@@ -37,7 +37,8 @@ async def on_user_edit(message: Message):
         # Format the message with edit timestamp
         edit_datetime = datetime.fromtimestamp(message.edit_date)
         edit_time = edit_datetime.strftime("%H:%M")
-        edited_text = f"💬 <b>{user.full_name}</b> ({user.id})\n\n{message.text}\n\n<i>✎ {_("edited", locale='uz')} • {edit_time}</i>"
+        edited = _("edited", locale="uz")
+        edited_text = f"💬 <b>{user.full_name}</b> ({user.id})\n\n{message.text}\n\n<i>✎ {edited} • {edit_time}</i>"
         await message.bot.edit_message_text(
             chat_id=mapping["group_id"],
             message_id=mapping["group_msg_id"],
@@ -68,7 +69,8 @@ async def on_admin_edit(message: Message):
     # Format the message with edit timestamp
     edit_datetime = datetime.fromtimestamp(message.edit_date)
     edit_time = edit_datetime.strftime("%H:%M")
-    edited_text = f"{message.text}\n\n<i>✎ {_("edited", locale=user.lang)} • {edit_time}</i>"
+    edited = _("edited", locale=user.lang)
+    edited_text = f"{message.text}\n\n<i>✎ {edited} • {edit_time}</i>"
 
     try:
         await message.bot.edit_message_text(

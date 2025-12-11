@@ -12,6 +12,15 @@ from utils import logger
 
 router = Router()
 
+async def isOldPendingChat(chat: Chat) -> bool:
+    """Check if there is chats is newer than this chat."""
+    chatCount = await Chat._collection.count_documents({
+        "updated_at": {"$gt": chat.updated_at}
+    })
+    if chatCount > 0:
+        return True
+    return False
+    
 def shift_entities(entities, shift_by: int):
     if not entities:
         return None
@@ -56,7 +65,7 @@ async def new_chat(message: Message, lang: str = 'uz'):
     try:
         sent = await message.bot.send_message(chat_id=GENERAL_CHAT_ID, text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n <i>📩 1 ta o'qilmagan xabar</i>", parse_mode="HTML", reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id))
         chat = await Chat.add(message.from_user.id)
-        await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "pending_message_ids": [message.message_id]}})
+        await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "pending_message_ids": [message.message_id], 'updated_at': int(datetime.now().timestamp())}})
     
     except ValueError:
         chat = None
@@ -94,10 +103,8 @@ async def forward_user_msg(message: Message):
 
     if chat['status'] == 'pending' and chat["notificated_message_id"]:
         
-        await Chat._collection.update_one(
-            {"_id": chat["_id"]},
-             {"$push": {"pending_message_ids": message.message_id}}
-        )
+       
+        
         
         await message.bot.edit_message_text(
             chat_id=GENERAL_CHAT_ID,
@@ -105,6 +112,32 @@ async def forward_user_msg(message: Message):
             text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
             parse_mode="HTML",
             reply_markup=ClaimChatKeyboard.keyboard(user.id)
+        )
+        
+        if await isOldPendingChat(Chat(**chat)):
+            ## Resend the notification to the bottom of the chat list
+            resent_msg = await message.bot.copy_message(
+                chat_id=GENERAL_CHAT_ID,
+                from_chat_id=GENERAL_CHAT_ID,
+                message_id=chat["notificated_message_id"],
+                reply_markup=ClaimChatKeyboard.keyboard(user.id)
+            )
+            
+            ## Delete the old notificated message
+            await message.bot.delete_message(
+                chat_id=GENERAL_CHAT_ID,
+                message_id=chat["notificated_message_id"]
+            )
+            
+            ## Update the chat with new notificated_message_id
+            await Chat._collection.update_one(
+                {"_id": chat["_id"]},
+                {"$set": {"notificated_message_id": resent_msg.message_id, 'updated_at': int(datetime.now().timestamp())}}
+            )
+            
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+             {"$push": {"pending_message_ids": message.message_id}}
         )
 
         return
@@ -118,7 +151,6 @@ async def forward_user_msg(message: Message):
         logger.error(f"Chat for user {user.id} is missing support_group_id!")
         return
 
-    text = ""
     sent = None
     
     try:
@@ -189,9 +221,10 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
         await callback.message.edit_text(text=close_text, reply_markup=None, parse_mode="HTML")
 
         if chat and chat["notificated_message_id"]:
+            talk_ended = _("Talk ended", locale=user['lang'])
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
             await callback.bot.send_message(chat_id=chat["support_group_id"], text=close_text, parse_mode="HTML")
-            await callback.bot.send_message(chat_id=chat["user_id"], text=f"<a href='https://myurls.co/azcitytravel'><i>{_("Talk ended", locale=user['lang'])}</i></a>")
+            await callback.bot.send_message(chat_id=chat["user_id"], text=f"<a href='https://myurls.co/azcitytravel'><i>{talk_ended}</i></a>")
             await callback.bot.edit_message_text(chat_id=GENERAL_CHAT_ID, message_id=chat["notificated_message_id"], text=close_text)
 
     except Exception as e:

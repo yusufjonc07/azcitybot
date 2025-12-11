@@ -1,18 +1,21 @@
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message, MessageEntity
+from app.keyboards.chat import ClaimChatKeyboard
 
 from app.keyboards import LangKeyboard
-from database.models import User
+from database.models import User, Chat
 from loader import _
+
+from data.config import GENERAL_CHAT_ID
+from datetime import datetime
 
 router = Router()
 
 
 # /admin command handler
-@router.message(Command("admin"))
+@router.message(Command("admin"), F.chat.type == "group")
 async def _admin(message: Message):
-    print("Received /admin command")
     if not message.chat or message.chat.type not in ("group", "supergroup"):
         await message.reply(_("This command can only be used in groups."))
         return
@@ -34,6 +37,35 @@ async def _admin(message: Message):
         await message.reply(_(f"@{username} is now an admin for this group!"))
     else:
         await message.reply(_(f"@{username} is already an admin for this group."))
+
+# /admin command handler
+@router.message(Command("pending"), F.chat.type == "group")
+async def _pending_chats(message: Message):
+    if str(message.chat.id) != GENERAL_CHAT_ID:
+        await message.reply(_("This command can only be used in the general chat."))
+        return
+    
+    pending_chats = await Chat._collection.find({"status": "pending"}).to_list()
+    
+    for chat in pending_chats:
+        resent_msg = await message.bot.copy_message(
+            chat_id=GENERAL_CHAT_ID,
+            from_chat_id=GENERAL_CHAT_ID,
+            message_id=chat["notificated_message_id"],
+            reply_markup=ClaimChatKeyboard.keyboard(chat["user_id"])
+        )
+        
+        ## Delete the old notificated message
+        await message.bot.delete_message(
+            chat_id=GENERAL_CHAT_ID,
+            message_id=chat["notificated_message_id"]
+        )
+        
+        ## Update the chat with new notificated_message_id
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+            {"$set": {"notificated_message_id": resent_msg.message_id, 'updated_at': int(datetime.now().timestamp())}}
+        )
 
 
 @router.message(Command("lang"))
