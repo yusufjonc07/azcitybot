@@ -76,21 +76,7 @@ async def admin_reply(message: Message, user_id=None):
 
 
     try:
-        sent = None
-        if message.text:
-            sent = await message.bot.send_message(user_id, message.text)
-        elif message.photo:
-            sent = await message.bot.send_photo(user_id, message.photo[-1].file_id, caption=message.caption or "")
-        elif message.document:
-            sent = await message.bot.send_document(user_id, message.document.file_id, caption=message.caption or "")
-        elif message.video:
-            sent = await message.bot.send_video(user_id, message.video.file_id, caption=message.caption or "")
-        elif message.voice:
-            sent = await message.bot.send_voice(user_id, message.voice.file_id, caption=message.caption or "")
-        elif message.sticker:
-            sent = await message.bot.send_sticker(user_id, message.sticker.file_id)
-        else:
-            sent = await message.bot.send_message(user_id, "[Unsupported message type]")
+        sent = await message.bot.copy_message(chat_id=user_id, from_chat_id=message.chat.id, message_id=message.message_id)
 
         # Store message mapping for edit support (admin->user)
         if sent:

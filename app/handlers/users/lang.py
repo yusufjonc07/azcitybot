@@ -47,6 +47,10 @@ async def _pending_chats(message: Message):
     
     pending_chats = await Chat._collection.find({"status": "pending"}).to_list()
     
+    if len(pending_chats) == 0:
+        await message.reply("Kutayotgan mijozlar yo'q. ✅")
+        return
+    
     for chat in pending_chats:
         resent_msg = await message.bot.copy_message(
             chat_id=GENERAL_CHAT_ID,

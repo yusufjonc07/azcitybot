@@ -98,21 +98,24 @@ async def forward_user_msg(message: Message):
 
     if not chat:
         client = await User.get(user.id)
+        print("No active chat found, creating new one.")    
         await new_chat(message=message, lang=client.lang)
         return
 
     if chat['status'] == 'pending' and chat["notificated_message_id"]:
         
-       
-        
-        
-        await message.bot.edit_message_text(
-            chat_id=GENERAL_CHAT_ID,
-            message_id=chat["notificated_message_id"],
-            text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
-            parse_mode="HTML",
-            reply_markup=ClaimChatKeyboard.keyboard(user.id)
-        )
+        try:
+            await message.bot.edit_message_text(
+                chat_id=GENERAL_CHAT_ID,
+                message_id=chat["notificated_message_id"],
+                text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
+                parse_mode="HTML",
+                reply_markup=ClaimChatKeyboard.keyboard(user.id)
+            )   
+        except:
+            print('Failed to update notificated message')
+            print(chat)
+            return
         
         if await isOldPendingChat(Chat(**chat)):
             ## Resend the notification to the bottom of the chat list
