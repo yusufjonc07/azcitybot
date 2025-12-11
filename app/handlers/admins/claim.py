@@ -27,6 +27,7 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
      # Find the pending chat
     chat = await Chat._collection.find_one({
         'user_id': chat_user_id,
+        'status': 'pending',
         'notificated_message_id': {'$ne': None}
     })
     if not chat:
