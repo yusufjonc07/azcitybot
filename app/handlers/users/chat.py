@@ -1,7 +1,7 @@
 from datetime import datetime
 from aiogram import F, Router
 from aiogram.types import CallbackQuery, Message, MessageEntity
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
 
 from app.keyboards.chat import CancelChatKeyboard, ClaimChatKeyboard, EndChatKeyboard
 from data.config import GENERAL_CHAT_ID
@@ -78,6 +78,47 @@ async def new_chat(message: Message, lang: str = 'uz'):
     return chat
 
 
+async def updatePendingNotification(message: Message, chat, user: User):
+    try:
+        await message.bot.edit_message_text(
+            chat_id=GENERAL_CHAT_ID,
+            message_id=chat["notificated_message_id"],
+            text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
+            parse_mode="HTML",
+            reply_markup=ClaimChatKeyboard.keyboard(user.id)
+        )   
+    except:
+        return
+    
+    if await isOldPendingChat(Chat(**chat)):
+        ## Resend the notification to the bottom of the chat list
+        resent_msg = await message.bot.copy_message(
+            chat_id=GENERAL_CHAT_ID,
+            from_chat_id=GENERAL_CHAT_ID,
+            message_id=chat["notificated_message_id"],
+            reply_markup=ClaimChatKeyboard.keyboard(user.id)
+        )
+        
+        ## Delete the old notificated message
+        await message.bot.delete_message(
+            chat_id=GENERAL_CHAT_ID,
+            message_id=chat["notificated_message_id"]
+        )
+        
+        ## Update the chat with new notificated_message_id
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+            {"$set": {"notificated_message_id": resent_msg.message_id, 'updated_at': int(datetime.now().timestamp())}}
+        )
+        
+    await Chat._collection.update_one(
+        {"_id": chat["_id"]},
+            {"$push": {"pending_message_ids": message.message_id}}
+    )
+
+    return
+
+
 
 # --- USER MESSAGE FORWARDING (text + media) ---
 @router.message(
@@ -103,47 +144,8 @@ async def forward_user_msg(message: Message):
         return
 
     if chat['status'] == 'pending' and chat["notificated_message_id"]:
-        
-        try:
-            await message.bot.edit_message_text(
-                chat_id=GENERAL_CHAT_ID,
-                message_id=chat["notificated_message_id"],
-                text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
-                parse_mode="HTML",
-                reply_markup=ClaimChatKeyboard.keyboard(user.id)
-            )   
-        except:
-            print('Failed to update notificated message')
-            print(chat)
-            return
-        
-        if await isOldPendingChat(Chat(**chat)):
-            ## Resend the notification to the bottom of the chat list
-            resent_msg = await message.bot.copy_message(
-                chat_id=GENERAL_CHAT_ID,
-                from_chat_id=GENERAL_CHAT_ID,
-                message_id=chat["notificated_message_id"],
-                reply_markup=ClaimChatKeyboard.keyboard(user.id)
-            )
-            
-            ## Delete the old notificated message
-            await message.bot.delete_message(
-                chat_id=GENERAL_CHAT_ID,
-                message_id=chat["notificated_message_id"]
-            )
-            
-            ## Update the chat with new notificated_message_id
-            await Chat._collection.update_one(
-                {"_id": chat["_id"]},
-                {"$set": {"notificated_message_id": resent_msg.message_id, 'updated_at': int(datetime.now().timestamp())}}
-            )
-            
-        await Chat._collection.update_one(
-            {"_id": chat["_id"]},
-             {"$push": {"pending_message_ids": message.message_id}}
-        )
-
-        return
+        await updatePendingNotification(message, chat, user)
+        return 
     
 
     group_id = chat["support_group_id"]
@@ -161,6 +163,13 @@ async def forward_user_msg(message: Message):
     except TelegramBadRequest as e:
         logger.info("Forwading without reply")
         sent = await copy_user_message(message, group_id, None)
+    except TelegramForbiddenError as e:
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+            {"$set": {"support_group_id": None, "notice_message_id": None,  "status": "pending"}}
+        )
+        await updatePendingNotification(message, chat, user)
+        return
     except Exception as e:
         logger.error(f"Error forwarding message: {e}")
         return
@@ -184,8 +193,8 @@ async def _cancel_chat(callback: CallbackQuery, callback_data: CancelChatKeyboar
     
     try:
         chat = await Chat._collection.find_one({
-                "user_id": callback.from_user.id,
-                "status": "pending",
+            "user_id": callback.from_user.id,
+            "status": "pending",
         })
         
         if chat and chat["notificated_message_id"]:
@@ -222,7 +231,7 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
 
         close_text = f"#yopildi ✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user['name']}</b> ({user['_id']}) \n Guruh: <b>{group.title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {round(seconds)} soniya"
         await callback.message.edit_text(text=close_text, reply_markup=None, parse_mode="HTML")
-
+        
         if chat and chat["notificated_message_id"]:
             talk_ended = _("Talk ended", locale=user['lang'])
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
