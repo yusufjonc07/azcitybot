@@ -5,7 +5,7 @@ from database.models import Chat, User
 from loader import _
 from database.models.messageMap import MessageMap
 from datetime import datetime
-
+from aiogram.exceptions import TelegramForbiddenError
 router = Router()
 
 @router.callback_query(ClaimChatKeyboard.Callback.filter())
@@ -59,6 +59,27 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
         else:
             to_group_id = min(group_loads, key=group_loads.get)
    
+    
+    client_user = await User.get(chat_user_id)
+
+    try:
+        # Notify the group
+        notice_sent = await callback.bot.send_message(
+        chat_id=to_group_id,
+        text="#muloqotda\n✅ <b>{name}</b> ({id}) mijoz qabul qilindi\n💬 Suhbat shu yerda davom etadi...\n\n".format(
+            name=client_user.name,
+        id=client_user.id,
+        ),
+        parse_mode="HTML",
+        reply_markup=EndChatKeyboard.keyboard(chatId=str(chat["_id"])))
+    except TelegramForbiddenError:
+        admin_groups = group_ids.remove(to_group_id)
+        # Update admin's admin_groups
+        await User._collection.update_one({"_id": user_id}, {"$set": {"admin_groups": admin_groups, "status": "admin" if admin_groups else "user"}})
+        # Retry claim process
+        _claim(callback, callback_data)
+        return
+    
     # Update chat: set admin_id, support_group_id, status, claimed_at
     await Chat._collection.update_one(
         {'_id': chat['_id']},
@@ -70,17 +91,6 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
         }}
     )
     
-    client_user = await User.get(chat_user_id)
-
-    # Notify the group
-    notice_sent = await callback.bot.send_message(
-        chat_id=to_group_id,
-        text="#muloqotda\n✅ <b>{name}</b> ({id}) mijoz qabul qilindi\n💬 Suhbat shu yerda davom etadi...\n\n".format(
-            name=client_user.name,
-        id=client_user.id,
-        ),
-        parse_mode="HTML",
-        reply_markup=EndChatKeyboard.keyboard(chatId=str(chat["_id"])))
     
     await Chat._collection.update_one(
         {"_id": chat["_id"]},
