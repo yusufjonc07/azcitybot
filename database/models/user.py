@@ -1,6 +1,6 @@
 from enum import Enum
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from database.base import Base
 
@@ -15,33 +15,78 @@ class Status(Enum):
 class User(Base):
     id: int = Field(default_factory=int, alias="_id")
     name: str
-    username: str | None = Field(default=None)
-    fullname: str | None = Field(default=None)
-    status: str = Field(default="user")
+    username: str | None = None
+    fullname: str | None = None
+    status: str = "user"
     admin_groups: list[str] = Field(default_factory=list)
     lang: str
 
-    _status: Status = Status
+    _status_enum = Status
+
+    # --- Validators ---
+
+    @field_validator("admin_groups", mode="before")
+    @classmethod
+    def normalize_admin_groups(cls, v):
+        return v or []
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def validate_status(cls, v):
+        if isinstance(v, Status):
+            return v.name
+        if v not in Status.__members__:
+            return Status.user.name
+        return v
+
+    # --- Business logic ---
 
     def is_admin(self, super: bool = False) -> bool:
         if super:
-            return self.status == "super_admin"
-        return self.status in ("admin", "super_admin")
+            return self.status == Status.super_admin.name
+        return self.status in (
+            Status.admin.name,
+            Status.super_admin.name,
+        )
 
     def statuses_to_edit(self, status: str) -> list[str]:
-        self_status = getattr(self._status, self.status).value
-        status = getattr(self._status, status).value
-        return [] if status >= self_status else [i.name for i in self._status if i.value < self_status]
+        self_value = self._status_enum[self.status].value
+        target_value = self._status_enum[status].value
+
+        if target_value >= self_value:
+            return []
+
+        return [
+            s.name
+            for s in self._status_enum
+            if s.value < self_value
+        ]
+
+    # --- DB helpers ---
 
     @classmethod
-    async def get_or_create(cls, id: int, name: str, username: str | None,  lang: str):
+    async def get_or_create(
+        cls,
+        id: int,
+        name: str,
+        username: str | None,
+        lang: str,
+    ):
         user = await cls.get(id)
-        user = (
-            await cls.update(user.id, name=name, username=username)
-            if user
-            else await cls.create(_id=id, name=name, username=username, lang=lang)
+
+        if user:
+            return await cls.update(
+                user.id,
+                name=name,
+                username=username,
+            )
+
+        return await cls.create(
+            _id=id,
+            name=name,
+            username=username,
+            lang=lang,
         )
-        return user
 
 
 User.set_collection("users")
