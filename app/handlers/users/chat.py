@@ -63,7 +63,7 @@ async def new_chat(message: Message, lang: str = 'uz'):
     await message.reply(text=text, parse_mode="HTML")
 
     try:
-        sent = await message.bot.send_message(chat_id=GENERAL_CHAT_ID, text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n <i>📩 1 ta o'qilmagan xabar</i>", parse_mode="HTML", reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id))
+        sent = await message.bot.send_message(chat_id=GENERAL_CHAT_ID, text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n @{message.from_user.username} \n <i>📩 1 ta o'qilmagan xabar</i>", parse_mode="HTML", reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id))
         chat = await Chat.add(message.from_user.id)
         await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "pending_message_ids": [message.message_id], 'updated_at': int(datetime.now().timestamp())}})
     
@@ -83,7 +83,7 @@ async def updatePendingNotification(message: Message, chat, user: User):
         await message.bot.edit_message_text(
             chat_id=GENERAL_CHAT_ID,
             message_id=chat["notificated_message_id"],
-            text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
+            text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n @{user.username} \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
             parse_mode="HTML",
             reply_markup=ClaimChatKeyboard.keyboard(user.id)
         )   
