@@ -10,9 +10,9 @@ DIR = Path(__file__).absolute().parent.parent
 
 TELEGRAM_BOT_TOKEN = env.str("TELEGRAM_BOT_TOKEN")
 
-API_PORT = env.int("API_PORT", 8000)
+API_PORT = env.int("API_PORT", 8989)
 
-WEBHOOK_URL = env.str("WEBHOOK_URL")
+WEBHOOK_URL = env.str("WEBHOOK_URL", "https://bot.azcity.uz/webhook")
 
 GENERAL_CHAT_ID = env.str("GENERAL_CHAT_ID")
 
