@@ -22,12 +22,14 @@ def init_db(session: Session) -> None:
     # SQLModel.metadata.create_all(engine)
 
     user = session.exec(
-        select(User).where(User.email == settings.FIRST_SUPERUSER)
+        select(User).where(User.telegram_id == settings.FIRST_SUPERUSER_TELEGRAM_ID)
     ).first()
     if not user:
         user_in = UserCreate(
-            email=settings.FIRST_SUPERUSER,
-            password=settings.FIRST_SUPERUSER_PASSWORD,
-            is_superuser=True,
+            telegram_id=settings.FIRST_SUPERUSER_TELEGRAM_ID,
+            full_name="Admin",
         )
         user = crud.create_user(session=session, user_create=user_in)
+        user.is_superuser = True
+        session.add(user)
+        session.commit()

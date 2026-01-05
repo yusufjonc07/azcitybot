@@ -23,7 +23,6 @@ import { handleError } from "@/utils"
 
 const formSchema = z.object({
   full_name: z.string().max(30).optional(),
-  email: z.email({ message: "Invalid email address" }),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -40,7 +39,6 @@ const UserInformation = () => {
     criteriaMode: "all",
     defaultValues: {
       full_name: currentUser?.full_name ?? undefined,
-      email: currentUser?.email,
     },
   })
 
@@ -68,9 +66,6 @@ const UserInformation = () => {
     if (data.full_name !== currentUser?.full_name) {
       updateData.full_name = data.full_name
     }
-    if (data.email !== currentUser?.email) {
-      updateData.email = data.email
-    }
 
     mutation.mutate(updateData)
   }
@@ -88,6 +83,22 @@ const UserInformation = () => {
           onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-4"
         >
+          <FormItem>
+            <FormLabel>Telegram ID</FormLabel>
+            <p className="py-2 truncate max-w-sm text-muted-foreground">
+              {currentUser?.telegram_id}
+            </p>
+          </FormItem>
+
+          {currentUser?.username && (
+            <FormItem>
+              <FormLabel>Username</FormLabel>
+              <p className="py-2 truncate max-w-sm">
+                @{currentUser.username}
+              </p>
+            </FormItem>
+          )}
+
           <FormField
             control={form.control}
             name="full_name"
@@ -111,27 +122,6 @@ const UserInformation = () => {
                   >
                     {field.value || "N/A"}
                   </p>
-                </FormItem>
-              )
-            }
-          />
-
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) =>
-              editMode ? (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              ) : (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <p className="py-2 truncate max-w-sm">{field.value}</p>
                 </FormItem>
               )
             }

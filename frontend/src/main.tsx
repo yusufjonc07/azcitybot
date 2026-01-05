@@ -11,7 +11,18 @@ import { ApiError, OpenAPI } from "./client"
 import { ThemeProvider } from "./components/theme-provider"
 import { Toaster } from "./components/ui/sonner"
 import "./index.css"
+import { getTelegramWebApp } from "./lib/telegram"
 import { routeTree } from "./routeTree.gen"
+
+// Initialize Telegram WebApp SDK if available
+const webApp = getTelegramWebApp()
+if (webApp) {
+  // Set theme based on Telegram's color scheme
+  const colorScheme = webApp.colorScheme
+  if (colorScheme === "dark" || colorScheme === "light") {
+    localStorage.setItem("vite-ui-theme", colorScheme)
+  }
+}
 
 OpenAPI.BASE = import.meta.env.VITE_API_URL
 OpenAPI.TOKEN = async () => {

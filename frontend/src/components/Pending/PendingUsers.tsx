@@ -13,7 +13,8 @@ const PendingUsers = () => (
     <TableHeader>
       <TableRow>
         <TableHead>Full Name</TableHead>
-        <TableHead>Email</TableHead>
+        <TableHead>Username</TableHead>
+        <TableHead>Telegram ID</TableHead>
         <TableHead>Role</TableHead>
         <TableHead>Status</TableHead>
         <TableHead>
@@ -28,7 +29,10 @@ const PendingUsers = () => (
             <Skeleton className="h-4 w-32" />
           </TableCell>
           <TableCell>
-            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-24" />
+          </TableCell>
+          <TableCell>
+            <Skeleton className="h-4 w-28" />
           </TableCell>
           <TableCell>
             <Skeleton className="h-5 w-20 rounded-full" />
