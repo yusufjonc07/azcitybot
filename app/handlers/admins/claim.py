@@ -74,11 +74,13 @@ async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callb
         parse_mode="HTML",
         reply_markup=EndChatKeyboard.keyboard(chatId=str(chat["_id"])))
     except TelegramForbiddenError:
-        admin_groups = group_ids.remove(to_group_id)
+        # Bot was kicked from the support group - remove it from admin's groups
+        group_ids.remove(to_group_id)  # remove() modifies list in-place, returns None
+        admin_groups = group_ids  # use the modified list
         # Update admin's admin_groups
         await User._collection.update_one({"_id": user_id}, {"$set": {"admin_groups": admin_groups, "status": "admin" if admin_groups else "user"}})
         # Retry claim process
-        _claim(callback, callback_data)
+        await _claim(callback, callback_data)
         return
     
     # Update chat: set admin_id, support_group_id, status, claimed_at

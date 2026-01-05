@@ -30,7 +30,7 @@ async def _admin(message: Message):
         await message.reply(_(f"User @{username} not found in the bot database."))
         return
     group_id = str(message.chat.id)
-    admin_groups = user.get("admin_groups", [])
+    admin_groups = user.get("admin_groups") or []
     if group_id not in admin_groups:
         admin_groups.append(group_id)
         await User._collection.update_one({"_id": user["_id"]}, {"$set": {"admin_groups": admin_groups, "status": "admin"}})
