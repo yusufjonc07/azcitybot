@@ -1,11 +1,12 @@
 import uuid
 
+from sqlalchemy import BigInteger, Column
 from sqlmodel import Field, Relationship, SQLModel
 
 
 # Shared properties
 class UserBase(SQLModel):
-    telegram_id: int = Field(unique=True, index=True)
+    telegram_id: int = Field(sa_column=Column(BigInteger, unique=True, index=True))
     username: str | None = Field(default=None, max_length=255)
     full_name: str | None = Field(default=None, max_length=255)
     photo_url: str | None = Field(default=None, max_length=512)
