@@ -34,10 +34,6 @@
 
 [![API docs](img/dashboard.png)](https://github.com/fastapi/full-stack-fastapi-template)
 
-### Dashboard - Items
-
-[![API docs](img/dashboard-items.png)](https://github.com/fastapi/full-stack-fastapi-template)
-
 ### Dashboard - Dark Mode
 
 [![API docs](img/dashboard-dark.png)](https://github.com/fastapi/full-stack-fastapi-template)
