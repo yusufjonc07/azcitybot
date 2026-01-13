@@ -31,3 +31,10 @@ if settings.all_cors_origins:
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+
+# Include Telegram bot webhook router
+try:
+    from app.bot_client.bot import client_app as bot_router
+    app.include_router(bot_router, prefix=settings.API_V1_STR)
+except ImportError:
+    pass  # Bot module not available

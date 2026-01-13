@@ -37,8 +37,22 @@ class Settings(BaseSettings):
     ENVIRONMENT: Literal["local", "staging", "production"] = "local"
     
     # Telegram Bot Configuration
-    TELEGRAM_BOT_TOKEN: str
+    TELEGRAM_BOT_TOKEN: str = ""
     TELEGRAM_BOT_USERNAME: str = ""
+    DOMAIN: str = "localhost"
+    
+    # Bot support group settings
+    SUPPORT_GROUP_ID: int = 0  # Telegram group ID for support messages
+    ERROR_NOTIFY_USER_ID: int = 0  # Admin user ID for error notifications
+    
+    # i18n settings for bot
+    I18N_PATH: str = "app/bot_client/data/locales"
+    I18N_DOMAIN: str = "messages"
+    
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def WEBHOOK_URL(self) -> str:
+        return f"https://{self.DOMAIN}/api/v1/bot/webhook"
 
     BACKEND_CORS_ORIGINS: Annotated[
         list[AnyUrl] | str, BeforeValidator(parse_cors)
