@@ -26,6 +26,7 @@ class CancelChatKeyboard(BaseInlineKeyboard):
 
     class Callback(CallbackData, prefix="cancelchat"):
         data: str
+        
 
 class ClaimChatKeyboard(BaseInlineKeyboard):
     def keyboard(self, user_Id):
@@ -54,6 +55,7 @@ class ChooseToSend(BaseInlineKeyboard):
 
     class Callback(CallbackData, prefix="choosetosend"):
         data: int
+
 
 EndChatKeyboard = EndChatKeyboard()
 ClaimChatKeyboard = ClaimChatKeyboard()

@@ -5,6 +5,7 @@ from app.keyboards.chat import ClaimChatKeyboard
 
 from app.keyboards import LangKeyboard
 from database.models import User, Chat
+from database.models.messageMap import MessageMap
 from loader import _
 
 from data.config import GENERAL_CHAT_ID
@@ -90,3 +91,44 @@ async def _lang_callback(call: CallbackQuery, callback_data: LangKeyboard.Callba
     except Exception as e:
         print(f"Error updating user language: {e}")
 
+
+# /delete command handler
+@router.message(Command("delete"), F.chat.type == "group")
+async def _delete_message(message: Message):
+
+    if message.reply_to_message is None:
+        await message.reply(_("Please reply to the message you want to delete with /delete command."))
+        return
+    
+    message_id = message.reply_to_message.message_id
+    msg_map: MessageMap | None = await MessageMap._collection.find_one({
+        "group_msg_id": message_id,
+        "group_id": str(message.chat.id)
+    })
+
+    if not msg_map:
+        print("No message map found.", message_id, message.chat.id)
+        return
+
+    if msg_map["direction"] != "group_to_user":
+        print("Message direction is not group_to_user.")
+        return
+
+    try:
+        await message.bot.delete_message(
+            chat_id=msg_map["user_id"],
+            message_id=msg_map["user_msg_id"]
+        )
+        await message.bot.delete_message(
+            chat_id=msg_map["group_id"],
+            message_id=msg_map["group_msg_id"]
+        )
+        await message.bot.delete_message(
+            chat_id=msg_map["group_id"],
+            message_id=message.message_id
+        )
+        await MessageMap.delete(msg_map["_id"])
+        
+    except Exception as e:
+        print(f"Error deleting message: {e}")
+        return
