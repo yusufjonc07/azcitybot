@@ -1,6 +1,9 @@
+import re
+
 from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message, MessageEntity
+from aiogram.exceptions import TelegramBadRequest
 from app.keyboards.chat import ClaimChatKeyboard
 
 from app.keyboards import LangKeyboard
@@ -13,6 +16,15 @@ from datetime import datetime
 from utils import logger
 
 router = Router()
+
+# Strips Telegram custom (premium) emoji wrappers down to their plain fallback
+# emoji, e.g. '<tg-emoji emoji-id="123">📆</tg-emoji>' -> '📆'. Used as a fallback
+# when Telegram rejects a custom emoji (DOCUMENT_INVALID) so the message still sends.
+_TG_EMOJI_RE = re.compile(r"<tg-emoji[^>]*>(.*?)</tg-emoji>", re.DOTALL)
+
+
+def _strip_custom_emoji(text: str) -> str:
+    return _TG_EMOJI_RE.sub(r"\1", text)
 
 
 # /admin command handler
@@ -106,10 +118,17 @@ async def _lang_callback(call: CallbackQuery, callback_data: LangKeyboard.Callba
         print(f"Error updating user language: {e}")
 
     if call.message:
+        welcome = _("welcome_message", locale=callback_data.lang)
         try:
-            await call.message.edit_text(
-                _("welcome_message", locale=callback_data.lang), parse_mode="HTML",
-            )
+            await call.message.edit_text(welcome, parse_mode="HTML")
+        except TelegramBadRequest as e:
+            # A custom (premium) emoji with an invalid/inaccessible id makes
+            # Telegram reject the whole message (DOCUMENT_INVALID). Retry with
+            # the plain fallback emoji so the user still gets the welcome.
+            try:
+                await call.message.edit_text(_strip_custom_emoji(welcome), parse_mode="HTML")
+            except Exception as e2:
+                print(f"Error editing welcome message (fallback): {e2}")
         except Exception as e:
             print(f"Error editing welcome message: {e}")
 
