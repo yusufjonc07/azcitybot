@@ -8,9 +8,16 @@ async def user_middleware(event: TelegramEventObserver):
     @event.middleware()
     async def process(handler, event: Message | CallbackQuery | InlineQuery, data):
         await process_user(event.from_user, data)
-        await handler(event, data)
+        return await handler(event, data)
 
     async def process_user(from_user, data):
-        data["user"] = await User.get_or_create(
-            from_user.id, name=from_user.full_name, username=from_user.username, lang="uz"
-        )
+        # Some updates (channel auto-forwards, anonymous group admins) have no
+        # from_user. Don't crash the whole update chain in that case.
+        if from_user is None:
+            return
+        try:
+            data["user"] = await User.get_or_create(
+                from_user.id, name=from_user.full_name, username=from_user.username, lang="uz"
+            )
+        except Exception as e:
+            print(f"user_middleware: failed to load user {getattr(from_user, 'id', None)}: {e}")

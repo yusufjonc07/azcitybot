@@ -35,16 +35,26 @@ async def on_user_edit(message: Message):
     user = message.from_user
     try:
         # Format the message with edit timestamp
-        edit_datetime = datetime.fromtimestamp(message.edit_date)
-        edit_time = edit_datetime.strftime("%H:%M")
+        edit_time = datetime.fromtimestamp(message.edit_date).strftime("%H:%M") if message.edit_date else ""
         edited = _("edited", locale="uz")
-        edited_text = f"💬 <b>{user.full_name}</b> ({user.id})\n\n{message.text}\n\n<i>✎ {edited} • {edit_time}</i>"
-        await message.bot.edit_message_text(
-            chat_id=mapping["group_id"],
-            message_id=mapping["group_msg_id"],
-            text=edited_text,
-            parse_mode="HTML"
-        )
+        body = message.text if message.text is not None else message.caption
+        if body is None:
+            return
+        edited_body = f"💬 <b>{user.full_name}</b> ({user.id})\n\n{body}\n\n<i>✎ {edited} • {edit_time}</i>"
+        if message.text is not None:
+            await message.bot.edit_message_text(
+                chat_id=mapping["group_id"],
+                message_id=mapping["group_msg_id"],
+                text=edited_body,
+                parse_mode="HTML"
+            )
+        else:
+            await message.bot.edit_message_caption(
+                chat_id=mapping["group_id"],
+                message_id=mapping["group_msg_id"],
+                caption=edited_body,
+                parse_mode="HTML"
+            )
     except Exception as e:
         print(f"Failed to edit forwarded group message: {e}")
 
@@ -61,24 +71,33 @@ async def on_admin_edit(message: Message):
     })
     if not mapping:
         return
-    user = await User.get(mapping['user_id'])
-    
-    if not user:
-        return
-
-    # Format the message with edit timestamp
-    edit_datetime = datetime.fromtimestamp(message.edit_date)
-    edit_time = edit_datetime.strftime("%H:%M")
-    edited = _("edited", locale=user.lang)
-    edited_text = f"{message.text}\n\n<i>✎ {edited} • {edit_time}</i>"
 
     try:
-        await message.bot.edit_message_text(
-            chat_id=mapping["user_id"],
-            message_id=mapping["user_msg_id"],
-            text=edited_text,
-            parse_mode="HTML"
-        )
+        user = await User.get(mapping['user_id'])
+        if not user:
+            return
+
+        # Format the message with edit timestamp
+        edit_time = datetime.fromtimestamp(message.edit_date).strftime("%H:%M") if message.edit_date else ""
+        edited = _("edited", locale=user.lang)
+        body = message.text if message.text is not None else message.caption
+        if body is None:
+            return
+        edited_body = f"{body}\n\n<i>✎ {edited} • {edit_time}</i>"
+        if message.text is not None:
+            await message.bot.edit_message_text(
+                chat_id=mapping["user_id"],
+                message_id=mapping["user_msg_id"],
+                text=edited_body,
+                parse_mode="HTML"
+            )
+        else:
+            await message.bot.edit_message_caption(
+                chat_id=mapping["user_id"],
+                message_id=mapping["user_msg_id"],
+                caption=edited_body,
+                parse_mode="HTML"
+            )
     except Exception as e:
         print(f"Failed to edit forwarded user message: {e}")
 
@@ -120,7 +139,7 @@ async def on_user_reaction(event: MessageReactionUpdated):
         logger.error(f"Failed to sync user reaction to group: {e}")
 
 # --- ADMIN REACTION HANDLER ---
-@router.message_reaction(F.chat.type == "group")
+@router.message_reaction(F.chat.type.in_({"group", "supergroup"}))
 async def on_admin_reaction(event: MessageReactionUpdated):
 
     print("Admin Reaction", event.chat.id, event.message_id)

@@ -10,13 +10,18 @@ from loader import _
 
 from data.config import GENERAL_CHAT_ID
 from datetime import datetime
+from utils import logger
 
 router = Router()
 
 
 # /admin command handler
-@router.message(Command("admin"), F.chat.type == "group")
-async def _admin(message: Message):
+@router.message(Command("admin"), F.chat.type.in_({"group", "supergroup"}))
+async def _admin(message: Message, user: User = None):
+    # These commands live in user_router (no admin status middleware), so guard
+    # explicitly — otherwise any group member could promote arbitrary admins.
+    if not user or not user.is_admin():
+        return
     if not message.chat or message.chat.type not in ("group", "supergroup"):
         await message.reply(_("This command can only be used in groups."))
         return
@@ -39,38 +44,50 @@ async def _admin(message: Message):
     else:
         await message.reply(_(f"@{username} is already an admin for this group."))
 
-# /admin command handler
-@router.message(Command("pending"), F.chat.type == "group")
-async def _pending_chats(message: Message):
+# /pending command handler
+@router.message(Command("pending"), F.chat.type.in_({"group", "supergroup"}))
+async def _pending_chats(message: Message, user: User = None):
+    if not user or not user.is_admin():
+        return
     if str(message.chat.id) != GENERAL_CHAT_ID:
         await message.reply(_("This command can only be used in the general chat."))
         return
-    
-    pending_chats = await Chat._collection.find({"status": "pending"}).to_list()
-    
+
+    # Only chats that actually have a notification message can be re-sent.
+    pending_chats = await Chat._collection.find({
+        "status": "pending",
+        "notificated_message_id": {"$ne": None}
+    }).to_list()
+
     if len(pending_chats) == 0:
         await message.reply("Kutayotgan mijozlar yo'q. ✅")
         return
-    
+
     for chat in pending_chats:
-        resent_msg = await message.bot.copy_message(
-            chat_id=GENERAL_CHAT_ID,
-            from_chat_id=GENERAL_CHAT_ID,
-            message_id=chat["notificated_message_id"],
-            reply_markup=ClaimChatKeyboard.keyboard(chat["user_id"])
-        )
-        
-        ## Delete the old notificated message
-        await message.bot.delete_message(
-            chat_id=GENERAL_CHAT_ID,
-            message_id=chat["notificated_message_id"]
-        )
-        
-        ## Update the chat with new notificated_message_id
-        await Chat._collection.update_one(
-            {"_id": chat["_id"]},
-            {"$set": {"notificated_message_id": resent_msg.message_id, 'updated_at': int(datetime.now().timestamp())}}
-        )
+        notificated_message_id = chat.get("notificated_message_id")
+        if not notificated_message_id:
+            continue
+        try:
+            resent_msg = await message.bot.copy_message(
+                chat_id=GENERAL_CHAT_ID,
+                from_chat_id=GENERAL_CHAT_ID,
+                message_id=notificated_message_id,
+                reply_markup=ClaimChatKeyboard.keyboard(chat["user_id"])
+            )
+
+            ## Delete the old notificated message
+            await message.bot.delete_message(
+                chat_id=GENERAL_CHAT_ID,
+                message_id=notificated_message_id
+            )
+
+            ## Update the chat with new notificated_message_id
+            await Chat._collection.update_one(
+                {"_id": chat["_id"]},
+                {"$set": {"notificated_message_id": resent_msg.message_id, 'updated_at': int(datetime.now().timestamp())}}
+            )
+        except Exception as e:
+            logger.error(f"Failed to resend pending notification for chat {chat.get('_id')}: {e}")
 
 
 @router.message(Command("lang"))
@@ -80,21 +97,28 @@ async def _lang(message: Message):
 @router.callback_query(LangKeyboard.filter())
 async def _lang_callback(call: CallbackQuery, callback_data: LangKeyboard.Callback):
     await call.answer("Processing...", show_alert=False)
-    
-            
-    await call.message.edit_text(
-        _("welcome_message", locale=callback_data.lang), parse_mode="HTML",
-    )
 
+    # Persist the language FIRST so the selection is saved even if the message
+    # can no longer be edited (old/inaccessible message).
     try:
         await User.update(call.from_user.id, lang=callback_data.lang)
     except Exception as e:
         print(f"Error updating user language: {e}")
 
+    if call.message:
+        try:
+            await call.message.edit_text(
+                _("welcome_message", locale=callback_data.lang), parse_mode="HTML",
+            )
+        except Exception as e:
+            print(f"Error editing welcome message: {e}")
+
 
 # /delete command handler
-@router.message(Command("delete"), F.chat.type == "group")
-async def _delete_message(message: Message):
+@router.message(Command("delete"), F.chat.type.in_({"group", "supergroup"}))
+async def _delete_message(message: Message, user: User = None):
+    if not user or not user.is_admin():
+        return
 
     if message.reply_to_message is None:
         await message.reply(_("Please reply to the message you want to delete with /delete command."))

@@ -1,7 +1,9 @@
 from datetime import datetime
 from aiogram import F, Router
-from aiogram.types import CallbackQuery, Message, MessageEntity
+from aiogram.filters import Command
+from aiogram.types import CallbackQuery, Message, MessageEntity, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError
+
 
 from app.keyboards.chat import CancelChatKeyboard, ClaimChatKeyboard, EndChatKeyboard
 from data.config import GENERAL_CHAT_ID
@@ -23,7 +25,7 @@ async def isOldPendingChat(chat: Chat) -> bool:
     
 def shift_entities(entities, shift_by: int):
     if not entities:
-        return None
+        return []
     shifted = []
     for e in entities:
         # Entities are immutable, need to copy
@@ -50,10 +52,35 @@ def add_prefix(message: Message, prefix: str) -> tuple[str, list[MessageEntity]]
     return text, entities
 
 async def copy_user_message(message: Message, to_chat_id: int, reply_message_id: int = None):
+    # NOTE: do not attach an inline keyboard with a bare button here — an inline
+    # button needs an action (url/callback_data) or Telegram rejects copy_to with
+    # BUTTON_TYPE_INVALID, which silently drops the reply linkage.
+    if message.reply_to_message is not None:
+        mapping = await MessageMap._collection.find_one({
+            "user_id": message.chat.id,
+            "user_msg_id": message.reply_to_message.message_id,
+        })
+        if mapping:
+            reply_message_id = mapping["group_msg_id"]
+
     return await message.copy_to(
         chat_id=to_chat_id,
         reply_to_message_id=reply_message_id,
     )
+
+async def get_last_admin_name(message: Message) -> str:
+    fullname = "Noma'lum"
+    last_inquiry = await Chat._collection.find_one({
+        "user_id": message.from_user.id,
+    }, sort=[("created_at", -1)])
+    if last_inquiry and last_inquiry.get("admin_id") is not None:
+        last_admin = await User._collection.find_one({
+            "_id": {"$in": [last_inquiry["admin_id"], str(last_inquiry["admin_id"])]},
+        })
+        if last_admin:
+            fullname = last_admin['name'] or "Noma'lum"
+
+    return "\nAdmin: <b>" + fullname + "</b>"
 
 
 async def new_chat(message: Message, lang: str = 'uz'):
@@ -63,8 +90,17 @@ async def new_chat(message: Message, lang: str = 'uz'):
     await message.reply(text=text, parse_mode="HTML")
 
     try:
-        sent = await message.bot.send_message(chat_id=GENERAL_CHAT_ID, text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n @{message.from_user.username} \n <i>📩 1 ta o'qilmagan xabar</i>", parse_mode="HTML", reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id))
+        
+        last_admin_name = await get_last_admin_name(message)
+        sent = await message.bot.send_message(chat_id=GENERAL_CHAT_ID, text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{message.from_user.full_name}</b> ({message.from_user.id}) \n @{message.from_user.username} {last_admin_name}\n  <i>📩 1 ta o'qilmagan xabar</i>", parse_mode="HTML", reply_markup=ClaimChatKeyboard.keyboard(message.from_user.id))
         chat = await Chat.add(message.from_user.id)
+        if chat is None:
+            # Chat record could not be created — remove the orphaned notification
+            try:
+                await message.bot.delete_message(GENERAL_CHAT_ID, sent.message_id)
+            except Exception:
+                pass
+            return None
         await Chat._collection.update_one({"_id": chat.id}, {"$set": {"notificated_message_id": sent.message_id, "pending_message_ids": [message.message_id], 'updated_at': int(datetime.now().timestamp())}})
     
     except ValueError:
@@ -80,10 +116,11 @@ async def new_chat(message: Message, lang: str = 'uz'):
 
 async def updatePendingNotification(message: Message, chat, user: User):
     try:
+        last_admin_name = await get_last_admin_name(message)
         await message.bot.edit_message_text(
             chat_id=GENERAL_CHAT_ID,
             message_id=chat["notificated_message_id"],
-            text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n @{user.username} \n <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
+            text=f"#kutyapti 🙋🏻‍♂️ Mijoz: <b>{user.full_name}</b> ({user.id}) \n @{user.username} {last_admin_name} \n  <i>📩 {len(chat['pending_message_ids']) + 1} ta o'qilmagan xabar</i>",
             parse_mode="HTML",
             reply_markup=ClaimChatKeyboard.keyboard(user.id)
         )   
@@ -117,7 +154,6 @@ async def updatePendingNotification(message: Message, chat, user: User):
     )
 
     return
-
 
 
 # --- USER MESSAGE FORWARDING (text + media) ---
@@ -205,7 +241,6 @@ async def _cancel_chat(callback: CallbackQuery, callback_data: CancelChatKeyboar
     
     return
 
-
 @router.callback_query(EndChatKeyboard.Callback.filter())
 async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Callback):
     await callback.answer()
@@ -220,20 +255,26 @@ async def _end_chat(callback: CallbackQuery, callback_data: EndChatKeyboard.Call
             return
 
         user = await User._collection.find_one({
-                "_id": chat['user_id'],
+            "_id": chat['user_id'],
         })
-        
-        group = await callback.bot.get_chat(chat["support_group_id"])
+        if not user:
+            return
+
+        try:
+            group = await callback.bot.get_chat(chat["support_group_id"])
+            group_title = group.title
+        except Exception:
+            group_title = "—"
 
         chatting_time = datetime.now().timestamp() - chat["created_at"]
         hours, remainder = divmod(chatting_time, 3600)
         minutes, seconds = divmod(remainder, 60)
 
-        close_text = f"#yopildi ✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user['name']}</b> ({user['_id']}) \n Guruh: <b>{group.title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {round(seconds)} soniya"
+        close_text = f"#yopildi ✈️ Suhbat yakunladi: \n Admin: <b>{callback.from_user.full_name}</b> \n Mijoz: <b>{user.get('name')}</b> ({user['_id']}) \n Guruh: <b>{group_title}</b> \n Suhbat vaqti: {hours} soat, {minutes} daqiqa, {round(seconds)} soniya"
         await callback.message.edit_text(text=close_text, reply_markup=None, parse_mode="HTML")
-        
+
         if chat and chat["notificated_message_id"]:
-            talk_ended = _("Talk ended", locale=user['lang'])
+            talk_ended = _("Talk ended", locale=user.get('lang', 'uz'))
             await Chat._collection.update_many({"_id": int(callback_data.chatId)}, {"$set": {"status": "ended", "finished_at": int(datetime.now().timestamp())}})
             await callback.bot.send_message(chat_id=chat["support_group_id"], text=close_text, parse_mode="HTML")
             await callback.bot.send_message(chat_id=chat["user_id"], text=f"<a href='https://myurls.co/azcitytravel'><i>{talk_ended}</i></a>")

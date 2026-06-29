@@ -25,12 +25,21 @@ def patching(record):
 
 
 logger = logger.patch(patching)
-logger.add(
-    f"{DIR}/logs/app.json",
-    format="{extra[serialized]}",
-    rotation="1 day",
-    retention="1 month",
-)
+# Adding a file sink can crash the whole process at import time if the logs
+# directory is missing or not writable (e.g. owned by another user). Keep the
+# bot alive and fall back to stdout/stderr sinks if the file sink fails.
+try:
+    import os
+
+    os.makedirs(f"{DIR}/logs", exist_ok=True)
+    logger.add(
+        f"{DIR}/logs/app.json",
+        format="{extra[serialized]}",
+        rotation="1 day",
+        retention="1 month",
+    )
+except Exception as e:  # noqa: BLE001
+    logger.warning(f"File log sink disabled: {e}")
 
 
 def setup_logger(name: str) -> None:

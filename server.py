@@ -1,4 +1,5 @@
 
+import html
 import traceback
 from fastapi import FastAPI
 from loader import dp, bot
@@ -15,12 +16,14 @@ ERROR_NOTIFY_USER_ID = 7657753017
 async def notify_error(error: Exception, context: str = ""):
     """Send error notification to admin user"""
     try:
+        # Escape dynamic parts so a '<' or '&' in the error/traceback doesn't
+        # make Telegram reject the HTML and swallow the whole notification.
         error_message = f"🚨 <b>Error occurred</b>\n\n"
         if context:
-            error_message += f"<b>Context:</b> {context}\n\n"
-        error_message += f"<b>Error:</b> {type(error).__name__}\n"
-        error_message += f"<b>Message:</b> {str(error)}\n\n"
-        error_message += f"<b>Traceback:</b>\n<pre>{traceback.format_exc()[-3000:]}</pre>"
+            error_message += f"<b>Context:</b> {html.escape(context)}\n\n"
+        error_message += f"<b>Error:</b> {html.escape(type(error).__name__)}\n"
+        error_message += f"<b>Message:</b> {html.escape(str(error))}\n\n"
+        error_message += f"<b>Traceback:</b>\n<pre>{html.escape(traceback.format_exc()[-3000:])}</pre>"
         await bot.send_message(ERROR_NOTIFY_USER_ID, error_message, parse_mode="HTML")
     except Exception as e:
         logger.error(f"Failed to send error notification: {e}")
@@ -28,9 +31,16 @@ async def notify_error(error: Exception, context: str = ""):
 
 @app.on_event("startup")
 async def on_startup():
-    await setup_middlewares(dp)
-    await setup_routes(dp)
-    
+    try:
+        await setup_middlewares(dp)
+        await setup_routes(dp)
+    except Exception as e:
+        # A setup error means the bot would run with no/partial handlers — fail
+        # loudly (notify + re-raise) instead of starting silently broken.
+        logger.error(f"Fatal startup error (routes/middlewares): {e}")
+        await notify_error(e, "Bot startup - routes/middlewares")
+        raise
+
     try:
         await bot.delete_webhook()
         await bot.set_webhook(WEBHOOK_URL, allowed_updates=["message", "callback_query", "edited_message", "message_reaction"])

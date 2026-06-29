@@ -46,7 +46,14 @@ class Base(BaseModel):
     @classmethod
     async def get_all(cls):
         objs = cls._collection.find()
-        return [cls(**u) async for u in objs]
+        result = []
+        async for u in objs:
+            try:
+                result.append(cls(**u))
+            except Exception as e:
+                # Skip (don't crash the whole export/broadcast on) one bad doc
+                print(f"Skipping invalid {cls.__name__} doc {u.get('_id')}: {e}")
+        return result
 
     @classmethod
     async def update(cls, id: int, **kwargs):

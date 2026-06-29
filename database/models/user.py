@@ -14,12 +14,15 @@ class Status(Enum):
 
 class User(Base):
     id: int = Field(default_factory=int, alias="_id")
-    name: str
+    # name/lang have safe defaults so loading a legacy/partial DB document never
+    # raises a pydantic ValidationError (which would otherwise crash any handler
+    # or middleware that loads the user).
+    name: str = ""
     username: str | None = None
     fullname: str | None = None
     status: str = "user"
     admin_groups: list[str] = Field(default_factory=list)
-    lang: str
+    lang: str = "uz"
 
     _status_enum = Status
 
