@@ -1,7 +1,10 @@
 
 import html
 import traceback
+from pathlib import Path
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from loader import dp, bot
 from data.config import WEBHOOK_URL
 from app import setup_routes, setup_middlewares, set_default_commands
@@ -9,6 +12,21 @@ from utils import logger
 from aiogram.exceptions import TelegramBadRequest
 
 app = FastAPI()
+
+# Company website served alongside the bot webhook.
+WEB_DIR = Path(__file__).resolve().parent / "web"
+
+# The site's HTML references assets via absolute paths (/assets/..., /static/...),
+# so mount those sub-paths. We deliberately don't mount at "/" so POST /webhook
+# keeps working.
+app.mount("/assets", StaticFiles(directory=WEB_DIR / "assets"), name="assets")
+app.mount("/static", StaticFiles(directory=WEB_DIR / "static"), name="static")
+
+
+@app.get("/")
+async def home():
+    """Serve the company website home page."""
+    return FileResponse(WEB_DIR / "index.html")
 
 ERROR_NOTIFY_USER_ID = 7657753017
 
@@ -59,6 +77,7 @@ async def on_shutdown():
 async def webhook(update: dict):
     try:
         await dp.feed_webhook_update(bot, update)
+        print('awaited', update)
     except TelegramBadRequest as e:
         logger.error(f"Error processing webhook update: {e}")
         await notify_error(e, "Webhook update - TelegramBadRequest")
