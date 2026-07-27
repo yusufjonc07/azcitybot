@@ -1,4 +1,5 @@
 
+import asyncio
 import html
 import traceback
 from pathlib import Path
@@ -59,13 +60,13 @@ async def on_startup():
         await notify_error(e, "Bot startup - routes/middlewares")
         raise
 
-    try:
-        await bot.delete_webhook()
-        await bot.set_webhook(WEBHOOK_URL, allowed_updates=["message", "callback_query", "edited_message", "message_reaction"])
-        await set_default_commands()
-    except Exception as e:
-        logger.error(f"Error: {e}")
-        await notify_error(e, "Bot startup - webhook setup")
+    # try:
+    #     # await bot.delete_webhook()
+    #     # await bot.set_webhook(WEBHOOK_URL, allowed_updates=["message", "callback_query", "edited_message", "message_reaction"])
+    #     # await set_default_commands()
+    # except Exception as e:
+    #     logger.error(f"Error: {e}")
+    #     await notify_error(e, "Bot startup - webhook setup")
         
     logger.info("Bot started!")
 
@@ -75,13 +76,16 @@ async def on_shutdown():
 
 @app.post("/webhook")
 async def webhook(update: dict):
+    asyncio.create_task(process_update(update))
+    return {"ok": True}
+
+
+async def process_update(update: dict):
     try:
         await dp.feed_webhook_update(bot, update)
-        print('awaited', update)
     except TelegramBadRequest as e:
         logger.error(f"Error processing webhook update: {e}")
         await notify_error(e, "Webhook update - TelegramBadRequest")
     except Exception as e:
         logger.error(f"Unexpected error processing webhook update: {e}")
         await notify_error(e, "Webhook update - Unexpected error")
-    return {"ok": True}

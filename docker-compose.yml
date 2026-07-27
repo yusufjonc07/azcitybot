@@ -28,14 +28,8 @@ services:
         entrypoint:
             - ./bin/entrypoint.sh
         volumes:
-            - .:/app
             - ./logs:/app/logs
 
-        command: >
-            uvicorn app.main:app
-            --host 0.0.0.0
-            --port 8989
-            --reload
         expose:
             - "8989"
         networks:

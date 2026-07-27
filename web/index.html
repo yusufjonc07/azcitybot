@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AzCity - Travel Agency</title>
+
+    <!-- fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montez&display=swap"
+        rel="stylesheet">
+
+    <!-- bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"
+        crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous"></script>
+
+
+    <!-- icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.3.0/css/all.min.css"
+        crossorigin="anonymous" />
+
+    <!-- swiper -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+
+    <!-- local styles and scripts -->
+    <link rel="stylesheet" href="static/style.css">
+
+
+</head>
+
+<body>
+    <header class="site-header">
+        <div class="header-top">
+            <div class="container-fluid th-container">
+                <div class="row justify-content-center justify-content-lg-between align-items-center g-2">
+                    <div class="col-12 col-lg-auto">
+                        <div class="header-links">
+                            <ul>
+                                <li>
+                                    <i class="fa-solid fa-location-dot"></i>
+                                    <span class="location-ticker-wrap">
+                                        <div class="swiper locationSwiper">
+                                            <div class="swiper-wrapper">
+                                                <div class="swiper-slide">🇰🇷 경남 진주시 상대로143번길 17-10</div>
+                                                <div class="swiper-slide">🇺🇿 Namangan shahar I.Karimov ko'chasi 40A-uy
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </span>
+                                </li>
+                                <li>
+                                    <i class="fa-regular fa-clock"></i>
+                                    <span>Every day, 10:00 – 22:00</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-12 col-lg-auto">
+                        <div class="header-right">
+                            <div class="header-links">
+                                <ul>
+                                  
+                                
+                                 <li><a href="tel:18771176" data-discover="true">📞 1877-1176</a>
+                                    </li>
+                                    <li><a href="https://t.me/azcitysupport"
+                                            data-discover="true">
+                                        <i class="fa-brands fa-telegram me-2"></i> Support
+                                        </a></li>
+                                        </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <nav class="navbar navbar-expand-lg sticky-top bg-body-tertiary">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <img src="assets/logos/horizontal-logo.png" alt="Bootstrap" height="60">
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                
+                <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="#">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#top-companies">Partners</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#testimonials">Testimonials</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#contact">Contact</a>
+                        </li>
+                    </ul>
+                      <label class="language-picker" for="language-select">
+                        <i class="fa-solid fa-globe"></i>
+                        <select id="language-select" aria-label="Choose language">
+                            <option value="en">English</option>
+                            <option value="uz">O‘zbekcha</option>
+                            <option value="ru">Русский</option>
+                            <option value="ko">한국어</option>
+                        </select>
+                    </label>
+                    <a class="btn btn-lg rounded-pill px-4 py-3 btn-outline-info book-btn"
+                        href="https://t.me/azcitykorea">Book Now
+
+                        <i class="fa"> <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg></i>
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <section class="hero-carousel carousel-fade m-0">
+            <div class="carousel-indicators">
+                <button class="active" type="button" data-slide="0" aria-label="Slide 1"></button>
+                <button type="button" data-slide="1" aria-label="Slide 2"></button>
+            </div>
+            <div class="hero-slide hero-slide-1 active">
+                <img src="assets/carousel/incheon-airport.png" alt="Incheon Airport">
+                <div class="carousel-caption">
+                    <div class="hero-content">
+                        <p class="hero-subtitle">Your trusted flight partner</p>
+                        <h1>Book Airline Tickets with Confidence</h1>
+                        <p class="hero-text">We help you find the best flights, compare fares, and provide expert
+                            guidance for a smooth travel experience.</p>
+                        <a class="btn btn-lg rounded-pill px-4 py-3 btn-outline-info book-btn"
+                            href="https://t.me/azcitykorea">Book Now
+
+                            <i class="fa"> <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                </svg></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-slide hero-slide-2">
+                <img src="assets/carousel/tashkent-airport.png" alt="Tashkent Airport">
+                <div class="carousel-caption">
+                    <div class="hero-content">
+                        <p class="hero-subtitle">Expert flight consultations</p>
+                        <h1>Fast, Reliable Flight Support</h1>
+                        <p class="hero-text">From ticket booking to travel advice, we make planning your next flight
+                            simple, efficient, and stress-free.</p>
+                        <a href="#" class="btn btn-lg rounded-pill px-4 py-2 btn-outline-info">Get Advice</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </header>
+
+    <script>
+        const indicators = document.querySelectorAll('.carousel-indicators button');
+        const slides = document.querySelectorAll('.hero-slide');
+
+        indicators.forEach((button) => {
+            button.addEventListener('click', () => {
+                const targetIndex = Number(button.getAttribute('data-slide'));
+
+                indicators.forEach((btn) => btn.classList.remove('active'));
+                slides.forEach((slide) => slide.classList.remove('active'));
+
+                button.classList.add('active');
+                slides[targetIndex].classList.add('active');
+            });
+        });
+    </script>
+
+    <section class="top-companies" id="top-companies">
+        <div class="container py-5">
+            <div class="text-center mb-4">
+                <p class="section-label">Trusted by industry leaders</p>
+                <h2>Top Airline Companies</h2>
+            </div>
+            <div class="company-swiper swiper" aria-label="Airline partners">
+                <div class="company-grid swiper-wrapper">
+                    <div class="company-card">
+                        <img src="assets/swiper/qanot-sharq.png" alt="Qanot Sharq" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/uzb-airways.png" alt="Uzbekistan Airways" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/centrum-air.png" alt="Centrum Air" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/tway-air.png" alt="T'way Air" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/eastar-jet.png" alt="Eastar Jet" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/air-astana.png" alt="Air Astana" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/scat-airlines.png" alt="SCAT Airlines" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/qatar-airways.png" alt="Qatar Airways" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/emirates.png" alt="Emirates" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/jeju-air.png" alt="Jeju Air" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/asiana-airlines.png" alt="Asiana Airlines" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/malasia-airlines.png" alt="Malaysia Airlines" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/korean-air.png" alt="Korean Air" />
+                    </div>
+                    <div class="company-card">
+                        <img src="assets/swiper/turkish-airlines.png" alt="Turkish Airlines" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="content-section testimonial-section" id="testimonials">
+        <div class="container-fluid py-5">
+            <div class="section-heading text-center mb-4">
+                <p class="section-label">Testimonials </p>
+                <h2>What Clients Say About Us</h2>
+            </div>
+            <div class="swiper testimonial-swiper">
+                <div class="swiper-wrapper" id="testimonial-list"></div>
+            </div>
+        </div>
+    </section>
+
+
+
+    <section class="content-section stats-section">
+        <div class="container pb-5">
+            <div class="section-heading text-center mb-5">
+                <p class="section-label">Trusted by Travelers</p>
+                <h2>Our Impact in Numbers</h2>
+            </div>
+            <div class="stats-grid" id="stats-list"></div>
+        </div>
+    </section>
+
+    <section class="content-section gallery-section">
+        <div class="container py-5">
+            <div class="section-heading text-center mb-4">
+                <p class="section-label">Our Workplace Gallery</p>
+                <h2>Moments from Our Own Workspace</h2>
+            </div>
+            <div class="gallery-grid" id="gallery-list"></div>
+        </div>
+    </section>
+
+    <section class="contact-section" id="contact">
+        <div class="container">
+            <div class="contact-card">
+                <div>
+                    <p class="section-label">Ready when you are</p>
+                    <h3>Let’s plan your next safe, smooth journey.</h3>
+                    <p>From ticket reservations to practical advice, our team is here to help every step of the way.</p>
+                </div>
+                <a href="mailto:hello@azcity.com" class="btn btn-lg rounded-pill px-4 py-2 btn-outline-info">Contact
+                    Us</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <img src="assets/logos/horizontal-logo.png" alt="AzCity Travel Agency">
+                    <p>Your trusted partner for simple, safe, and seamless travel planning.</p>
+                    <div class="footer-socials" aria-label="Social media">
+                        <a href="https://www.instagram.com/azcitytravel/" aria-label="Instagram"><i
+                                class="fa-brands fa-instagram"></i></a>
+                        <a href="https://t.me/azcitykorea" aria-label="Telegram"><i
+                                class="fa-brands fa-telegram"></i></a>
+                        <a href="https://www.facebook.com/zuhriddin.azcity/" aria-label="Facebook"><i
+                                class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://www.whatsapp.com/channel/0029VbB5wRiGpLHJmksDq30D" aria-label="whatsapp"><i
+                                class="fa-brands fa-whatsapp"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Explore</h3>
+                    <a href="#">Home</a>
+                    <a href="#top-companies">Our Partners</a>
+                    <a href="#testimonials">Testimonials</a>
+                </div>
+                <div class="footer-column">
+                    <h3>Services</h3>
+                    <a href="https://myurls.co/azcitytravel">Flight Reservations</a>
+                    <a href="https://myurls.co/azcitytravel">Travel Consultation</a>
+                    <a href="https://myurls.co/azcitytravel">Customer Support</a>
+                </div>
+                <div class="footer-column footer-contact">
+                    <h3>Visit Us</h3>
+                    <p><i class="fa-solid fa-location-dot"></i> 🇺🇿 Namangan, I. Karimov Street 40A</p>
+                    <p><i class="fa-solid fa-location-dot"></i> 🇰🇷 경남 진주시 상대로143번길 17-10</p>
+                    <p><i class="fa-regular fa-clock"></i> Every day, 10:00 – 22:00</p>
+                    <a class="footer-contact-link" href="https://myurls.co/azcitytravel">Get in touch <i
+                            class="fa-solid fa-arrow-right"></i></a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 AzCity Travel Agency. All rights reserved.</p>
+                <div><a href="#">Privacy Policy</a><a href="#">Terms of Service</a></div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+    <script src="static/scripts.js"></script>
+
+</body>
+
+
+</html>

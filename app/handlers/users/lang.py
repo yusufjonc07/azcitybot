@@ -1,6 +1,7 @@
 import re
 
 from aiogram import Router, F
+from aiogram.enums import ChatMemberStatus
 from aiogram.filters import Command
 from aiogram.types import CallbackQuery, Message, MessageEntity
 from aiogram.exceptions import TelegramBadRequest
@@ -58,9 +59,8 @@ async def _admin(message: Message, user: User = None):
 
 # /pending command handler
 @router.message(Command("pending"), F.chat.type.in_({"group", "supergroup"}))
-async def _pending_chats(message: Message, user: User = None):
-    if not user or not user.is_admin():
-        return
+async def _pending_chats(message: Message):
+   
     if str(message.chat.id) != GENERAL_CHAT_ID:
         await message.reply(_("This command can only be used in the general chat."))
         return
@@ -78,6 +78,7 @@ async def _pending_chats(message: Message, user: User = None):
     for chat in pending_chats:
         notificated_message_id = chat.get("notificated_message_id")
         if not notificated_message_id:
+            print("Skipping chat with no notificated_message_id:", chat.get("_id"))
             continue
         try:
             resent_msg = await message.bot.copy_message(
