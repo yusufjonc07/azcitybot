@@ -1,167 +1,270 @@
+import asyncio
+from datetime import datetime
+
 from aiogram import Router
+from aiogram.exceptions import TelegramForbiddenError
 from aiogram.types import CallbackQuery
+
 from app.keyboards.chat import ClaimChatKeyboard, EndChatKeyboard
 from database.models import Chat, User
-from loader import _
 from database.models.messageMap import MessageMap
-from datetime import datetime
-from aiogram.exceptions import TelegramForbiddenError
+from loader import _
 from utils import logger
 
 router = Router()
 
 
-@router.callback_query(ClaimChatKeyboard.Callback.filter())
-async def _claim(callback: CallbackQuery, callback_data: ClaimChatKeyboard.Callback):
-
-    await callback.answer()
-    user_id = callback.from_user.id
-    chat_user_id = int(callback_data.data)
-    admin = await User.get(user_id)
-    if not admin or not admin.is_admin():
-        await callback.answer(_('You are not an admin.'), show_alert=True)
-        return
-    # admin_groups is stored on the admin user document. Copy it so list
-    # mutation (dropping a forbidden group) doesn't touch the cached model.
-    group_ids = list(getattr(admin, 'admin_groups', None) or [])
-    if not group_ids:
-        await callback.answer(_('No group connected to your admin account.'), show_alert=True)
-        return
-
-    # Find the pending chat
-    chat = await Chat._collection.find_one({
-        'user_id': chat_user_id,
-        'status': 'pending',
-        'notificated_message_id': {'$ne': None}
-    })
-    if not chat:
-        return
-
-    if chat['status'] != 'pending':
-        return
-
-    client_user = await User.get(chat_user_id)
-    if not client_user:
-        await callback.answer(_('User not found.'), show_alert=True)
-        return
-
-    async def select_group(candidates):
-        former = await Chat._collection.find_one({
-            "user_id": chat_user_id,
-            "support_group_id": {"$in": candidates}
-        })
-        if former and former.get("support_group_id") in candidates:
-            return former["support_group_id"]
-        group_loads = {
-            gid: await Chat._collection.count_documents({
-                "support_group_id": gid,
-                "status": "active"
-            })
-            for gid in candidates
+async def _select_support_group(user_id: int, candidates: list[int]) -> int:
+    """
+    Reuse the user's previous support group if possible.
+    Otherwise, choose the least-loaded active support group.
+    """
+    former = await Chat._collection.find_one(
+        {
+            "user_id": user_id,
+            "support_group_id": {"$in": candidates},
         }
-        if all(v == 0 for v in group_loads.values()):
-            return candidates[0]
-        return min(group_loads, key=group_loads.get)
-
-    notice_text = "#muloqotda\n✅ <b>{name}</b> ({id}) \n @{username} \n mijoz qabul qilindi\n💬 Suhbat shu yerda davom etadi...\n\n".format(
-        name=client_user.name,
-        id=client_user.id,
-        username=client_user.username or "username yo'q"
     )
 
-    # Try candidate groups in a loop. If the bot was kicked from one, drop it and
-    # try the next one — without recursing (which would re-answer the callback
-    # and raise "query is too old").
-    notice_sent = None
-    to_group_id = None
-    while group_ids and notice_sent is None:
-        to_group_id = await select_group(group_ids)
+    if former:
+        group_id = former.get("support_group_id")
+        if group_id in candidates:
+            return group_id
+
+    loads = {}
+    for group_id in candidates:
+        loads[group_id] = await Chat._collection.count_documents(
+            {
+                "support_group_id": group_id,
+                "status": "active",
+            }
+        )
+
+    return min(loads, key=loads.get)
+
+
+async def _send_notice(callback: CallbackQuery, chat, admin_id: int, groups: list[int], client):
+    """
+    Try sending the conversation notice to one of the admin's groups.
+    Automatically removes groups where the bot was kicked.
+    """
+    notice_text = (
+        "#muloqotda\n"
+        f"✅ <b>{client.name}</b> ({client.id})\n"
+        f"@{client.username or 'username yo\'q'}\n"
+        "mijoz qabul qilindi\n"
+        "💬 Suhbat shu yerda davom etadi..."
+    )
+
+    available = groups.copy()
+
+    while available:
+        group_id = await _select_support_group(client.id, available)
+
         try:
-            notice_sent = await callback.bot.send_message(
-                chat_id=to_group_id,
+            message = await callback.bot.send_message(
+                chat_id=group_id,
                 text=notice_text,
                 parse_mode="HTML",
-                reply_markup=EndChatKeyboard.keyboard(chatId=str(chat["_id"]))
+                reply_markup=EndChatKeyboard.keyboard(chatId=str(chat["_id"])),
             )
+            return group_id, message
+
         except TelegramForbiddenError:
-            # Bot was kicked from this support group — remove it and retry next.
-            group_ids.remove(to_group_id)
+            logger.warning("Bot removed from support group %s", group_id)
+
+            available.remove(group_id)
+
             await User._collection.update_one(
-                {"_id": user_id},
-                {"$set": {"admin_groups": group_ids, "status": "admin" if group_ids else "user"}}
+                {"_id": admin_id},
+                {
+                    "$set": {
+                        "admin_groups": available,
+                        "status": "admin" if available else "user",
+                    }
+                },
             )
-            to_group_id = None
 
-    if notice_sent is None:
-        await callback.answer(_('No group connected to your admin account.'), show_alert=True)
-        return
+    return None, None
 
-    # Update chat: set admin_id, support_group_id, status, claimed_at
-    await Chat._collection.update_one(
-        {'_id': chat['_id']},
-        {'$set': {
-            'admin_id': user_id,
-            'support_group_id': to_group_id,
-            'status': 'active',
-            'claimed_at': int(datetime.now().timestamp())
-        }}
-    )
 
-    await Chat._collection.update_one(
-        {"_id": chat["_id"]},
-        {"$set": {"notice_message_id": notice_sent.message_id}}
-    )
-
-    await MessageMap._collection.insert_one({
-        "user_id": chat_user_id,
-        "user_msg_id": 000,  # No specific user message here
-        "group_id": str(to_group_id),
-        "group_msg_id": notice_sent.message_id,
-        "direction": "user_to_group",
-        "created_at": int(datetime.now().timestamp())
-    })
-
-    for msg_id in chat.get("pending_message_ids", []):
+async def _finish_claim(
+    callback: CallbackQuery,
+    callback_message,
+    chat,
+    client,
+    group_id: int,
+    notice,
+):
+    """
+    Runs in the background, after the webhook has already returned.
+    Copies any pending messages into the support group and updates
+    the claim notification with the final group name.
+    """
+    for user_message_id in chat.get("pending_message_ids", []):
         try:
-            sent = await callback.bot.copy_message(
-                chat_id=to_group_id,
-                from_chat_id=client_user.id,
-                message_id=msg_id,
-                reply_to_message_id=notice_sent.message_id
+            copied = await callback.bot.copy_message(
+                chat_id=group_id,
+                from_chat_id=client.id,
+                message_id=user_message_id,
+                reply_to_message_id=notice.message_id,
             )
 
-            await MessageMap._collection.insert_one({
-                "user_id": chat_user_id,
-                "user_msg_id": msg_id,
-                "group_id": str(to_group_id),
-                "group_msg_id": sent.message_id,
-                "direction": "user_to_group",
-                "created_at": int(datetime.now().timestamp())
-            })
+            await MessageMap._collection.insert_one(
+                {
+                    "user_id": client.id,
+                    "user_msg_id": user_message_id,
+                    "group_id": str(group_id),
+                    "group_msg_id": copied.message_id,
+                    "direction": "user_to_group",
+                    "created_at": int(datetime.now().timestamp()),
+                }
+            )
 
-        except Exception as e:
-            print(f"Failed to copy message {msg_id}: {e}")
+        except Exception:
+            logger.exception(
+                "Failed to copy message %s for user %s",
+                user_message_id,
+                client.id,
+            )
 
     try:
-        support_group = await callback.bot.get_chat(to_group_id)
+        support_group = await callback.bot.get_chat(group_id)
         group_name = support_group.title or "—"
     except Exception:
         group_name = "—"
 
-    # Update the general group message (best-effort: the claim is already applied)
-    if callback.message:
+    if callback_message:
         try:
-            await callback.message.edit_text(
-                text="#muloqotda\n✅ <b>{name}</b> ({id}) \n @{username} \n mijoz qabul qilindi\n💬 Suhbat <b>{group_name}</b>da davom etadi...".format(
-                    name=client_user.name,
-                    id=client_user.id,
-                    username=client_user.username or "username yo'q",
-                    group_name=group_name
+            await callback_message.edit_text(
+                (
+                    "#muloqotda\n"
+                    f"✅ <b>{client.name}</b> ({client.id})\n"
+                    f"@{client.username or 'username yo\'q'}\n"
+                    "mijoz qabul qilindi\n"
+                    f"💬 Suhbat <b>{group_name}</b>da davom etadi..."
                 ),
+                parse_mode="HTML",
                 reply_markup=None,
-                parse_mode="HTML"
             )
-        except Exception as e:
-            logger.error(f"Failed to update claim notification: {e}")
 
-    await callback.answer(_('You have claimed this chat.'), show_alert=True)
+        except Exception:
+            logger.exception("Failed to edit claim notification message.")
+
+
+@router.callback_query(ClaimChatKeyboard.Callback.filter())
+async def claim_chat(
+    callback: CallbackQuery,
+    callback_data: ClaimChatKeyboard.Callback,
+):
+    print("Answering...")
+    # Acknowledge immediately to avoid callback expiration.
+    await callback.answer()
+
+    print("Finding admin and client...")
+    admin_id = callback.from_user.id
+    client_id = int(callback_data.data)
+
+    admin = await User.get(admin_id)
+
+    if not admin:
+        print("Admin not found:", admin_id)
+        return
+
+    group_ids = list(getattr(admin, "admin_groups", []) or [])
+
+    if not group_ids:
+        print("Admin has no support groups:", admin_id)
+        return
+
+    # Atomically claim the chat so two admins can't both grab it.
+    chat = await Chat._collection.find_one_and_update(
+        {
+            "user_id": client_id,
+            "status": "pending",
+            "notificated_message_id": {"$ne": None},
+        },
+        {
+            "$set": {
+                "status": "claiming",
+                "admin_id": admin_id,
+            }
+        },
+        return_document=True,
+    )
+
+    if not chat:
+        print("Chat not found or already claimed:", client_id)
+        return
+
+    client = await User.get(client_id)
+
+    if not client:
+        print("Client not found:", client_id)
+        # Revert so the chat doesn't get stuck in "claiming".
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+            {"$set": {"status": "pending"}},
+        )
+        return
+
+    group_id, notice = await _send_notice(
+        callback,
+        chat,
+        admin_id,
+        group_ids,
+        client,
+    )
+
+    if notice is None:
+        logger.warning(
+            "Admin %s has no valid support groups.",
+            admin_id,
+        )
+        # Revert so the chat doesn't get stuck in "claiming".
+        await Chat._collection.update_one(
+            {"_id": chat["_id"]},
+            {"$set": {"status": "pending"}},
+        )
+        return
+
+    now = int(datetime.now().timestamp())
+
+    await Chat._collection.update_one(
+        {"_id": chat["_id"]},
+        {
+            "$set": {
+                "support_group_id": group_id,
+                "status": "active",
+                "claimed_at": now,
+                "notice_message_id": notice.message_id,
+            }
+        },
+    )
+
+    await MessageMap._collection.insert_one(
+        {
+            "user_id": client_id,
+            "user_msg_id": 0,
+            "group_id": str(group_id),
+            "group_msg_id": notice.message_id,
+            "direction": "user_to_group",
+            "created_at": now,
+        }
+    )
+
+    # Copying pending messages + editing the notice can be slow if there
+    # are many of them, so do it in the background and let the webhook
+    # return right away.
+    asyncio.create_task(
+        _finish_claim(
+            callback=callback,
+            callback_message=callback.message,
+            chat=chat,
+            client=client,
+            group_id=group_id,
+            notice=notice,
+        )
+    )
+    
+    return

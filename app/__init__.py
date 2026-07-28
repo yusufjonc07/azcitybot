@@ -8,7 +8,7 @@ from utils import logger
 
 from .commands import set_default_commands
 from .handlers.routers import admin_router, user_router
-from .middlewares import setup_middlewares
+# from .middlewares import setup_middlewares
 
 
 # Benign Telegram API errors that mean "nothing to do" rather than a real bug.
@@ -36,9 +36,11 @@ async def _ignore_benign_telegram_errors(event: ErrorEvent):
 async def setup_routes(dp: Dispatcher):
     # Global error handler: only TelegramBadRequest reaches it; benign ones are
     # swallowed, everything else propagates unchanged.
-    dp.errors.register(_ignore_benign_telegram_errors, ExceptionTypeFilter(TelegramBadRequest))
-    dp.include_router(user_router)
+    # dp.errors.register(_ignore_benign_telegram_errors, ExceptionTypeFilter(TelegramBadRequest))
     dp.include_router(admin_router)
+    dp.include_router(user_router)
 
 
-__all__ = ["setup_middlewares", "setup_routes"]
+__all__ = [
+    # "setup_middlewares",
+    "setup_routes"]

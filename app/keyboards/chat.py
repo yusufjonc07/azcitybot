@@ -32,7 +32,7 @@ class ClaimChatKeyboard(BaseInlineKeyboard):
     def keyboard(self, user_Id):
         builder = self.builder()
         builder.button(
-            text=_("☑️ Claim Chat"),
+            text=_("☑️ Chatni o'zlashtirish"),
             callback_data=ClaimChatKeyboard.Callback(data=user_Id)
         )
         return builder.as_markup()

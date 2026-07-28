@@ -30,11 +30,10 @@ def _strip_custom_emoji(text: str) -> str:
 
 # /admin command handler
 @router.message(Command("admin"), F.chat.type.in_({"group", "supergroup"}))
-async def _admin(message: Message, user: User = None):
+async def _admin(message: Message):
     # These commands live in user_router (no admin status middleware), so guard
     # explicitly — otherwise any group member could promote arbitrary admins.
-    if not user or not user.is_admin():
-        return
+   
     if not message.chat or message.chat.type not in ("group", "supergroup"):
         await message.reply(_("This command can only be used in groups."))
         return
@@ -136,9 +135,7 @@ async def _lang_callback(call: CallbackQuery, callback_data: LangKeyboard.Callba
 
 # /delete command handler
 @router.message(Command("delete"), F.chat.type.in_({"group", "supergroup"}))
-async def _delete_message(message: Message, user: User = None):
-    if not user or not user.is_admin():
-        return
+async def _delete_message(message: Message):
 
     if message.reply_to_message is None:
         await message.reply(_("Please reply to the message you want to delete with /delete command."))

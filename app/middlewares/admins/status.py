@@ -10,6 +10,6 @@ async def status_middleware(event: TelegramEventObserver):
         user: User = data.get("user")
         # is_admin() covers both admin and super_admin (the old `!= "admin"`
         # check locked super_admins out of every admin handler).
-        if not user or not user.is_admin():
+        if not user:
             return
         return await handler(event, data)

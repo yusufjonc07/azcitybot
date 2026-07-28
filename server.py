@@ -8,7 +8,9 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from loader import dp, bot
 from data.config import WEBHOOK_URL
-from app import setup_routes, setup_middlewares, set_default_commands
+from app import setup_routes, set_default_commands
+# from app import setup_middlewares
+
 from utils import logger
 from aiogram.exceptions import TelegramBadRequest
 
@@ -51,7 +53,7 @@ async def notify_error(error: Exception, context: str = ""):
 @app.on_event("startup")
 async def on_startup():
     try:
-        await setup_middlewares(dp)
+        # await setup_middlewares(dp)
         await setup_routes(dp)
     except Exception as e:
         # A setup error means the bot would run with no/partial handlers — fail
@@ -61,9 +63,9 @@ async def on_startup():
         raise
 
     # try:
-    #     # await bot.delete_webhook()
-    #     # await bot.set_webhook(WEBHOOK_URL, allowed_updates=["message", "callback_query", "edited_message", "message_reaction"])
-    #     # await set_default_commands()
+    #     await bot.delete_webhook()
+    #     await bot.set_webhook(WEBHOOK_URL, allowed_updates=["message", "callback_query", "edited_message", "message_reaction"])
+    #     await set_default_commands()
     # except Exception as e:
     #     logger.error(f"Error: {e}")
     #     await notify_error(e, "Bot startup - webhook setup")
