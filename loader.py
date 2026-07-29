@@ -2,11 +2,15 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.utils.i18n import I18n
+from aiogram.client.session.aiohttp import AiohttpSession
 
 from data.config import I18N_DOMAIN, I18N_PATH, RD_URI, TELEGRAM_BOT_TOKEN
 
+session = AiohttpSession(timeout=60)
+
 bot = Bot(
     TELEGRAM_BOT_TOKEN,
+    session=session,
     default=DefaultBotProperties(parse_mode=ParseMode.HTML, link_preview_is_disabled=True),
 )
 if RD_URI:
